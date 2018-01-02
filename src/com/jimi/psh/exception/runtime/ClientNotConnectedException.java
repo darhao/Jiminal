@@ -1,4 +1,4 @@
-package com.jimi.smt.eps.pkh.exception;
+package com.jimi.psh.exception.runtime;
 
 /**
  * 客户端未连接服务器异常
