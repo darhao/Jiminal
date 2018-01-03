@@ -1,0 +1,48 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+#.mtj.tmp/
+
+# Package Files #
+#*.jar
+#*.war
+#*.ear
+#*.zip
+#*.tar.gz
+#*.rar
+
+# ignore eclipse files
+#.project
+.classpath
+.settings
+
+# build files
+/build/
+/bin/
+
+/doc/~$T-EPS接口文档.docx
+/eps_printer/*.bak
+/eps_printer/printer/Picture.gif
+/eps_printer/printer/printer.cfg
+/doc/~$T防错料系统通讯协议_V1.0 2017-11-28.docx
+/eps_display/*.dcu
+/eps_display/*.ddp
+/eps_display/*.cfg
+/eps_display/*.dof
+/eps_display/*.res
+/eps_display/*.cfg
+/eps_display/*.ddp
+/eps_display/*.cfg
+/eps_display/*.dof
+/eps_display/*.res
+/eps_display/*.~pas
+/eps_display/*.~ddp
+/eps_display/*.~dfm
+/eps_display/*.dcu
