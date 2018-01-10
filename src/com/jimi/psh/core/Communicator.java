@@ -12,7 +12,6 @@ import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.exception.PackageParseException;
 
 /**
- * 几米物联 —— 包通讯基类<br>可以做服务器亦可以做客户端<br>
  * 需要指定一个通讯包的包路径<br>
  * 可配置项：<br>
  * <ul>
