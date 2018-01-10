@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.jimi.psh.annotation.Parse;
 import com.jimi.psh.annotation.Protocol;
-import com.jimi.psh.entity.Package;
+import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.exception.CRCException;
 import com.jimi.psh.exception.EnumValueNotExistException;
 import com.jimi.psh.exception.PackageParseException;
@@ -35,15 +35,15 @@ public class PackageParser {
 	 * @throws ProtocolNotMatchException 协议未能匹配时抛出
 	 * @throws EnumValueNotExistException 
 	 */
-	public static Package parse(List<Byte> bytes , String packagePath , boolean isReplyPackage) throws PackageParseException {
+	public static BasePackage parse(List<Byte> bytes , String packagePath , boolean isReplyPackage) throws PackageParseException {
 		if(!crc(bytes)) {
 			throw new CRCException(bytes);
 		}
 		//解析基类
-		Package p = new Package();
+		BasePackage p = new BasePackage();
 		p.length = bytes.get(0);
-		p.serialNo = BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 4, bytes.size() - 2));
-		p.crc = BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
+		p.serialNo = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 4, bytes.size() - 2));
+		p.crc = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
 		//判断协议类型
 		byte protocalType = bytes.get(1);
 		//获取信息内容字节列表
@@ -61,7 +61,7 @@ public class PackageParser {
 							.substring(0, cls.getSimpleName().replaceAll("Reply", "").indexOf("Package"));
 					p.protocol = protocolName;
 					//创建实例
-					Package target = (Package) cls.newInstance();
+					BasePackage target = (BasePackage) cls.newInstance();
 					//把父类数据复制到子类
 					FieldUtil.copy(p, target);
 					//根据注解把数据集填充到包对象并返回
@@ -133,7 +133,7 @@ public class PackageParser {
 	/**
 	 * 把包序列化成字节集
 	 */
-	public static List<Byte> serialize(Package p, String packagePath){
+	public static List<Byte> serialize(BasePackage p, String packagePath){
 		//初始化父类信息
 		initPackageInfo(p, packagePath);
 		//创建字节集
@@ -172,6 +172,8 @@ public class PackageParser {
 				case "java.lang.Integer":
 					int number = (int) field.get(p);
 					List<Byte> numberData = BytesParser.parseIntegerToBytes(number);
+					//根据字段长度截取整数
+					numberData = numberData.subList(numberData.size() - b, numberData.size());
 					for (int i = 0; i < numberData.size(); i++) {
 						bodyBytes.set(a+i, numberData.get(i));
 					}
@@ -203,6 +205,8 @@ public class PackageParser {
 					for (int i = 0; i < objects.length; i++) {
 						if(enumValue.equals(objects[i])){
 							List<Byte> enumIndex = BytesParser.parseIntegerToBytes(i);
+							//根据字段长度截取整数
+							enumIndex = enumIndex.subList(enumIndex.size() - b, enumIndex.size());
 							for (int j = 0; j < enumIndex.size(); j++) {
 								bodyBytes.set(a+j, enumIndex.get(j));
 							}
@@ -224,7 +228,10 @@ public class PackageParser {
 		}
 		bytes.addAll(serialNoBytes);
 		//序列化crc
-		bytes.addAll(BytesParser.parseIntegerToBytes(CRC16Util.CRC16_X25(bytes)));
+		List<Byte> crcData = BytesParser.parseIntegerToBytes(CRC16Util.CRC16_X25(bytes));
+		//如果有4个字节则去掉前两个
+		crcData = crcData.subList(crcData.size() - 2, crcData.size());
+		bytes.addAll(crcData);
 		return bytes;
 	}
 	
@@ -232,7 +239,7 @@ public class PackageParser {
 	/**
 	 * 根据包，构建回复包实例，并复制信息序列号
 	 */
-	public static Package createReplyPackage(Package p, String packagePath) {
+	public static BasePackage createReplyPackage(BasePackage p, String packagePath) {
 		//根据类名匹配回复包类
 		for (Class cls : ClassScanner.searchClass(packagePath)) {
 			//匹配
@@ -246,7 +253,7 @@ public class PackageParser {
 			if(string1.equals(string2)) {
 				try {
 					//创建对象
-					Package r = (Package) cls.newInstance();
+					BasePackage r = (BasePackage) cls.newInstance();
 					//复制信息序列号
 					r.serialNo = p.serialNo;
 					return r;
@@ -263,9 +270,9 @@ public class PackageParser {
 	 * 初始化包的基本信息（基本信息包括：长度、协议名）
 	 * @param p 需要进行初始化的包对象
 	 */
-	public static void initPackageInfo(Package p, String packagePath) {
+	public static void initPackageInfo(BasePackage p, String packagePath) {
 		//计算长度（已知长度：协议号+信息序列号+校验位=5）
-		int length = 5;
+		byte length = 5;
 		//创建用于存储Boolean类型字段字节编号的Set
 		Set<Integer> byteNoSet = new HashSet<Integer>();
 		for (Field field : p.getClass().getDeclaredFields()) {
@@ -292,8 +299,8 @@ public class PackageParser {
 	 * 对字节集进行CRC校验，无误返回true
 	 */
 	public static boolean crc(List<Byte> bytes) {
-		int calculationResults = CRC16Util.CRC16_X25(bytes.subList(0, bytes.size() - 2));
-		int record = BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
+		short calculationResults = CRC16Util.CRC16_X25(bytes.subList(0, bytes.size() - 2));
+		short record = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
 		return calculationResults == record;
 	}
 

@@ -14,7 +14,7 @@ import com.jimi.psh.entity.JustForTestBoardNumPackage;
 import com.jimi.psh.entity.JustForTestBoardNumReplyPackage;
 import com.jimi.psh.entity.JustForTestControlReplyPackage;
 import com.jimi.psh.entity.JustForTestHeartPackage;
-import com.jimi.psh.entity.Package;
+import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.exception.CRCException;
 import com.jimi.psh.exception.EnumValueNotExistException;
 import com.jimi.psh.exception.PackageParseException;
@@ -134,8 +134,8 @@ public class ParserTest{
 			System.out.println(" '枚举值未匹配' 测试异常捕捉成功");
 			System.out.println(e.getMessage());
 		}
-		List<Byte> bytes =  Arrays.asList(new Byte[] {0x08, 0x43, (byte) 0x02, 0x01, 0x00, 0x00 , 0x05, 0x01, (byte) 0xAE});
-		Package p = PackageParser.parse(bytes, packagePath, true);
+		List<Byte> bytes =  Arrays.asList(new Byte[] {0x0B, 0x48, 0x07, (byte) 0x88, 0x68, (byte) 0xDA, 0x29, 0x07, 0x04, 0x00, (byte) 0xAB, 0x4D});
+		BasePackage p = PackageParser.parse(bytes, packagePath, false);
 		List<Byte> bytes2 = PackageParser.serialize(p, packagePath);
 		Assert.assertArrayEquals(bytes.toArray(), bytes2.toArray());
 	}

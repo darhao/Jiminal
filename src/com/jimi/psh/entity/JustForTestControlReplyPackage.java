@@ -7,7 +7,7 @@ import com.jimi.psh.constant.JustForTestControlResult;
 import com.jimi.psh.constant.JustForTestReturnCode;
 
 @Protocol(0x43)
-public class JustForTestControlReplyPackage extends Package {
+public class JustForTestControlReplyPackage extends BasePackage {
 
 	@Parse({ 0, 1 })
 	private JustForTestClientDevice justForTestClientDevice;

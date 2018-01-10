@@ -19,6 +19,7 @@ public class ClassScanner {
 	 * @return 类列表
 	 */
 	public static List<Class> searchClass(String packagePath){
+		System.out.println(ClassScanner.class.getResource("/"));
 		ClassScanner classScanner = new ClassScanner();
 		classScanner.classPaths = new ArrayList<String>();
 		// 先把包名转换为路径,首先得到项目的classpath

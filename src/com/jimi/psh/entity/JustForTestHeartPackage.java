@@ -7,7 +7,7 @@ import com.jimi.psh.annotation.Protocol;
 import com.jimi.psh.constant.JustForTestLine;
 
 @Protocol(0x48)
-public class JustForTestHeartPackage extends Package {
+public class JustForTestHeartPackage extends BasePackage {
 
 	@Parse({0,1})
 	private JustForTestLine justForTestLine;
