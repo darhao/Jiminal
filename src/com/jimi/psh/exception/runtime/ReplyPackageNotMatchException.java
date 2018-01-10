@@ -1,6 +1,6 @@
 package com.jimi.psh.exception.runtime;
 
-import com.jimi.psh.entity.Package;
+import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.util.FieldUtil;
 
 /**
@@ -9,7 +9,7 @@ import com.jimi.psh.util.FieldUtil;
  */
 public class ReplyPackageNotMatchException extends RuntimeException {
 	
-	public ReplyPackageNotMatchException(Package p) {
+	public ReplyPackageNotMatchException(BasePackage p) {
 		System.err.println("=========↓异常包对象信息↓==========");
 		FieldUtil.print(p);
 		System.err.println("=========↑异常包对象信息↑==========");

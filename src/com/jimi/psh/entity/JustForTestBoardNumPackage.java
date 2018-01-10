@@ -7,13 +7,13 @@ import com.jimi.psh.annotation.Protocol;
 import com.jimi.psh.constant.JustForTestLine;
 
 @Protocol(0x42)
-public class JustForTestBoardNumPackage extends Package {
+public class JustForTestBoardNumPackage extends BasePackage {
 
 	@Parse({ 0, 1 })
 	private JustForTestLine justForTestLine;
 	@Parse({ 1, 4 })
 	private Date timestamp;
-	@Parse({ 5, 3 })
+	@Parse(value={ 5, 3 }, sign=true)
 	private int boardNum;
 
 	public JustForTestLine getLine() {

@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.entity.JustForTestBoardNumPackage;
 import com.jimi.psh.entity.JustForTestBoardNumReplyPackage;
 import com.jimi.psh.entity.JustForTestBoardResetPackage;
@@ -18,7 +19,6 @@ import com.jimi.psh.entity.JustForTestHeartPackage;
 import com.jimi.psh.entity.JustForTestHeartReplyPackage;
 import com.jimi.psh.entity.JustForTestLoginPackage;
 import com.jimi.psh.entity.JustForTestLoginReplyPackage;
-import com.jimi.psh.entity.Package;
 import com.jimi.psh.util.BytesParser;
 import com.jimi.psh.util.CRC16Util;
 import com.jimi.psh.util.ClassScanner;
@@ -31,7 +31,96 @@ import com.jimi.psh.util.FieldUtil;
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class UtilsTest {
-
+	
+	public void p(int a) {
+		System.out.println(Integer.toBinaryString(a) + " = " + a);
+	}
+	
+	public void testNumberType() {
+		System.out.println("字面量测试：高位不写，默认是0；字面量永远是int类型");
+		int a = 0xF;
+		int b = 0xFF;
+		p(a);
+		p(b);
+		System.out.println("32位以下类型，移位测试：满足-128~127之间的int值可以赋值给byte，以此类推；无符号右移只对int以及long有效");
+		System.out.println("32位以下类型，移位测试：低级类型左移溢出不会转换成更高级的类型，而是会变成负数，继续左移将变成0，再左移将出现奇怪的数字");
+		byte c = 0xF;
+		byte c1 = 0xF;
+		byte c2 = 0xFFFFFFFF;
+		c1 >>= 4;
+		c2 >>= 4;
+		p(c2);
+		c2 >>= 2;
+		p(c2);
+		c2 >>>= 2;//无符号右移无效
+		p(c2);
+		int c3 = -1;
+		c3 >>>= 8;//无符号右移有效
+		p(c3);
+		p(c1);
+		p(c);
+		c <<= 1;
+		p(c);
+		c >>= 1;
+		p(c);
+		c <<= 4;
+		p(c);
+		c >>= 4;
+		p(c);
+		c <<= 4;
+		p(c);
+		c >>>= 4;
+		p(c);
+		short e = 0x1FFF;
+		p(e);
+		e <<= 2;
+		p(e);
+		e <<= 2;
+		p(e);
+		int e1 = 0x1FFF;
+		e1 <<= 4;
+		p(e1);
+		System.out.println("自动类型转换测试：升级后符号位不变");
+		byte f = 0x32;
+		p(f);
+		short f1 = f;
+		p(f1);
+		int f2 = f1;
+		p(f2);
+		byte g = 0xFFFFFF82;
+		p(g);
+		short g1 = g;
+		p(g1);
+		int g2 = g1;
+		p(g2);
+		byte z = (byte) 0x82;
+		p(z);
+		int z1 = z;
+		p(z1);
+		System.out.println("强制类型转换测试：降级会丢失符号位");
+		int h = 0x10;
+		short h1 = (short) h;
+		p(h);
+		p(h1);
+		int i = 0x10101010;
+		short i1 = (short) i;
+		p(i);
+		p(i1);
+		int j = 0xFF222222;
+		short j1 = (short) j;
+		p(j);
+		p(j1);
+	}
+	
+	
+	@Test
+	public void negativeIntegerBytes() {
+		List<Byte> bytes = Arrays.asList(new Byte[] {(byte) 0xF4, (byte) 0xF3, (byte) 0x80});
+		List<Byte> bytes2 = BytesParser.negativeIntegerBytes(Arrays.asList(new Byte[] {(byte) 0xFF, 0x0B, 0x0C, (byte) 0x80}));
+		Assert.assertArrayEquals(bytes.toArray(), bytes2.toArray());
+	} 
+	
+	
 	@Test
 	public void crc() {
 		List<Byte> bytes = new ArrayList<Byte>();
@@ -45,7 +134,7 @@ public class UtilsTest {
 	
 	@Test
 	public void copy() {
-		Package a = new Package();
+		BasePackage a = new BasePackage();
 		a.length = 100;
 		a.protocol= "aaa";
 		JustForTestHeartPackage b = new JustForTestHeartPackage();
@@ -58,6 +147,7 @@ public class UtilsTest {
 	public void searchClass() {
 		List<Class> classes = ClassScanner.searchClass("com.jimi.psh.entity");
 		List<Class> classes2 = new ArrayList<Class>();
+		classes2.add(BasePackage.class);
 		classes2.add(JustForTestBoardNumPackage.class);
 		classes2.add(JustForTestBoardNumReplyPackage.class);
 		classes2.add(JustForTestBoardResetPackage.class);
@@ -69,7 +159,6 @@ public class UtilsTest {
 		classes2.add(JustForTestHeartReplyPackage.class);
 		classes2.add(JustForTestLoginPackage.class);
 		classes2.add(JustForTestLoginReplyPackage.class);
-		classes2.add(Package.class);
 		Assert.assertArrayEquals(classes.toArray(), classes2.toArray());
 	}
 	

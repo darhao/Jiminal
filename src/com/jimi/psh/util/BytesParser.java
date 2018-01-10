@@ -63,7 +63,7 @@ public class BytesParser {
 	
 	
 	/**
-	 * 把字节集转换成十六进制字符串，中间用空格隔开
+	 * 把十六进制字符串转换成字节集，中间用空格隔开
 	 */
 	public static List<Byte> parseStringToBytes(String string) {
 		List<Byte> bytes = new ArrayList<Byte>();
@@ -74,9 +74,19 @@ public class BytesParser {
 		return bytes;
 	}
 
+	
+	/**
+	 * 把表示整数的字节集变成负的
+	 */
+	public static List<Byte> negativeIntegerBytes(List<Byte> bytes){
+		int i = parseBytesToInteger(bytes);
+		int j = - i;
+		return parseIntegerToBytes(j);
+	}
+	
 
 	/**
-	 * 把1-4个字节集拼接成32位有符号整型
+	 * 把1-4个字节集拼接成32位有符号整型，如果为负数，请把字节集高位用1填充至32位再传入
 	 */
 	public static int parseBytesToInteger(List<Byte> bytes) {
 		if(bytes == null || bytes.isEmpty()) {
@@ -84,13 +94,11 @@ public class BytesParser {
 		}
 		int i = 0;
 		for (int j = 0; j < bytes.size(); j++) {
-			if(j == 0) {
-				//带符号的字节
-				i += bytes.get(j);
-			}else {
-				//不带符号的字节
-				i += Byte.toUnsignedInt(bytes.get(j));
-			}
+			byte b1 = bytes.get(j).byteValue();
+			//高位置零
+			int temp = b1 & 0x000000FF;
+			//按位或
+			i |= temp;
 			//最后一个字节不左移
 			if(j != bytes.size() -1) {
 				i <<= 8;
@@ -101,13 +109,12 @@ public class BytesParser {
 	
 	
 	/**
-	 * 把32位有符号整型分解成1-4个字节集
+	 * 把32位有符号整型分解成1-4个字节集，如果为负数，将会把字节集高位用1填充至32位再返回
 	 */
 	public static List<Byte> parseIntegerToBytes(int i) {
 		List<Byte> bytes = new ArrayList<Byte>();
 		do {
 			bytes.add((byte) i);
-			//无符号右移，无论 i 正负，左边的位都用0填充
 			i >>>= 8;
 		}while(i != 0);
 		//字节倒序

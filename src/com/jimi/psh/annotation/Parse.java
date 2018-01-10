@@ -22,4 +22,10 @@ public @interface Parse{
 	 */
 	int[] value();
 	
+	/**
+	 * 只对类型为int的字段有效，true表示为有符号，false为无符号，默认为false<br>
+	 * 注意：只对32位以下数值有效，32位以上会表现为有符号
+	 */
+	boolean sign() default false;
+	
 }

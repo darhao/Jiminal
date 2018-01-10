@@ -22,7 +22,7 @@ import com.jimi.psh.core.AsyncCommunicator;
 import com.jimi.psh.core.SyncCommunicator;
 import com.jimi.psh.entity.JustForTestControlPackage;
 import com.jimi.psh.entity.JustForTestControlReplyPackage;
-import com.jimi.psh.entity.Package;
+import com.jimi.psh.entity.BasePackage;
 import com.jimi.psh.util.FieldUtil;
 
 /**
@@ -47,9 +47,9 @@ public class SocketTest {
 		asyncCommunicator.startServer(new OnPackageArrivedListener() {
 			
 			@Override
-			public void onPackageArrived(Package p, Package r) {
+			public void onPackageArrived(BasePackage p, BasePackage r) {
 				try {
-					//模拟丢包（概率80%）
+					//模拟丢包（概率65%）
 					double a = 0;
 					if((a = Math.random()) < 0.65) {
 						System.out.println("服务器模拟丢包完成，随机数" + a);
@@ -99,7 +99,7 @@ public class SocketTest {
 		asyncCommunicator.send(justForTestControlPackage, new OnReplyPackageArrivedListener() {
 			
 			@Override
-			public void onReplyPackageArrived(Package r) {
+			public void onReplyPackageArrived(BasePackage r) {
 				Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(r));
 				cdl2.countDown();
 			}
@@ -131,7 +131,7 @@ public class SocketTest {
 	}
 	
 	
-	public void pressure() throws InterruptedException {
+	private void pressure() throws InterruptedException {
 		//线程数量
 		int quantity = 128;
 		//发送间隔（毫秒）
@@ -161,7 +161,7 @@ public class SocketTest {
 		OnReplyPackageArrivedListener onReplyPackageArrivedListener = new OnReplyPackageArrivedListener() {
 			
 			@Override
-			public void onReplyPackageArrived(Package r) {
+			public void onReplyPackageArrived(BasePackage r) {
 				Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(r));
 				cdl2.countDown();
 			}
@@ -182,7 +182,7 @@ public class SocketTest {
 	}
 	
 	
-	public void baseCommunicate(AsyncCommunicator asyncCommunicator) throws InterruptedException {
+	private void baseCommunicate(AsyncCommunicator asyncCommunicator) throws InterruptedException {
 		CountDownLatch cdl = new CountDownLatch(1);
 		
 		//构建包
@@ -196,7 +196,7 @@ public class SocketTest {
 		asyncCommunicator.send(justForTestControlPackage, new OnReplyPackageArrivedListener() {
 			
 			@Override
-			public void onReplyPackageArrived(Package r) {
+			public void onReplyPackageArrived(BasePackage r) {
 				Assert.fail();
 			}
 			
@@ -213,7 +213,7 @@ public class SocketTest {
 		asyncCommunicator.startServer(new OnPackageArrivedListener() {
 			
 			@Override
-			public void onPackageArrived(Package p, Package r) {
+			public void onPackageArrived(BasePackage p, BasePackage r) {
 				if(p instanceof JustForTestControlPackage) {
 					justForTestControlReplyPackage = (JustForTestControlReplyPackage) r;
 					justForTestControlReplyPackage.setClientDevice(((JustForTestControlPackage) p).getClientDevice());
@@ -251,7 +251,7 @@ public class SocketTest {
 		asyncCommunicator.send(justForTestControlPackage, new OnReplyPackageArrivedListener() {
 			
 			@Override
-			public void onReplyPackageArrived(Package r) {
+			public void onReplyPackageArrived(BasePackage r) {
 				Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(r));
 				cd3.countDown();
 			}
@@ -276,8 +276,8 @@ public class SocketTest {
 				syncCommunicator.startServer(new OnPackageArrivedListener() {
 					
 					@Override
-					public void onPackageArrived(Package p, Package r) {
-						//模拟丢包（概率80%）
+					public void onPackageArrived(BasePackage p, BasePackage r) {
+						//模拟丢包（概率65%）
 						double a = 0;
 						if((a = Math.random()) < 0.65) {
 							System.out.println("服务器模拟丢包完成，随机数" + a);
@@ -314,13 +314,13 @@ public class SocketTest {
 		justForTestControlPackage.setLine(JustForTestLine.L305);
 		justForTestControlPackage.setControlledDevice(JustForTestControlledDevice.ALARM);
 		justForTestControlPackage.setOperation(JustForTestOperation.ON);
-		Package a = syncCommunicator.send(justForTestControlPackage);
+		BasePackage a = syncCommunicator.send(justForTestControlPackage);
 		Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(a));
 		System.out.println("同步发包1成功");
-		Package b = syncCommunicator.send(justForTestControlPackage);
+		BasePackage b = syncCommunicator.send(justForTestControlPackage);
 		Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(b));
 		System.out.println("同步发包2成功");
-		Package c = syncCommunicator.send(justForTestControlPackage);
+		BasePackage c = syncCommunicator.send(justForTestControlPackage);
 		Assert.assertEquals(FieldUtil.md5(justForTestControlReplyPackage), FieldUtil.md5(c));
 		System.out.println("同步发包3成功");
 	}

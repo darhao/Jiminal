@@ -7,7 +7,7 @@ import com.jimi.psh.constant.JustForTestClientDevice;
 import com.jimi.psh.constant.JustForTestLine;
 
 @Protocol(0x52)
-public class JustForTestBoardResetPackage extends Package {
+public class JustForTestBoardResetPackage extends BasePackage {
 	
 	@Parse({0,1})
 	private JustForTestClientDevice justForTestClientDevice;

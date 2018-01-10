@@ -50,7 +50,7 @@ public class CRC16Util {
 	 * @param Buf
 	 * @return
 	 */
-	public static int CRC16_X25(byte[] Buf) {
+	public static short CRC16_X25(byte[] Buf) {
 		int CRC = 0xFFFF;
 		for (int i = 0; i < Buf.length; i++) {
 //			CRC = CRC ^ (Buf[i] & 0xff);
@@ -64,7 +64,7 @@ public class CRC16Util {
 //			}
 			CRC = (CRC >> 8) ^ crctab16[(CRC ^ Buf[i]) & 0xFF];
 		}
-		return (short)~CRC;
+		return (short) ~CRC;
 	}
 	
 	
@@ -73,7 +73,7 @@ public class CRC16Util {
 	 * @param Buf
 	 * @return
 	 */
-	public static int CRC16_X25(List<Byte> bytes) {
+	public static short CRC16_X25(List<Byte> bytes) {
 		byte[] bs = new byte[bytes.size()];
 		for (int i = 0; i < bs.length; i++) {
 			bs[i] = bytes.get(i);

@@ -8,7 +8,7 @@ import com.jimi.psh.constant.JustForTestLine;
 import com.jimi.psh.constant.JustForTestOperation;
 
 @Protocol((byte) 0xFF)
-public class JustForTestControl2Package extends Package {
+public class JustForTestControl2Package extends BasePackage {
 	
 	@Parse({1,1})
 	private JustForTestLine justForTestLine;
