@@ -2,7 +2,7 @@ package cc.darhao.jiminal.exception.runtime;
 
 import java.util.List;
 
-import cc.darhao.jiminal.util.BytesParser;
+import cc.darhao.dautils.api.BytesParser;
 
 /**
  * 包解析异常

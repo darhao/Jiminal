@@ -16,10 +16,10 @@ import cc.darhao.jiminal.exception.PackageParseException;
 import cc.darhao.jiminal.exception.ProtocolNotMatchException;
 import cc.darhao.jiminal.exception.runtime.EnumClassNotFoundException;
 import cc.darhao.jiminal.exception.runtime.ReplyPackageNotMatchException;
-import cc.darhao.jiminal.util.BytesParser;
-import cc.darhao.jiminal.util.CRC16Util;
-import cc.darhao.jiminal.util.ClassScanner;
-import cc.darhao.jiminal.util.FieldUtil;
+import cc.darhao.dautils.api.BytesParser;
+import cc.darhao.dautils.api.CRC16Util;
+import cc.darhao.dautils.api.ClassScanner;
+import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 包序列号和反序列化工具类

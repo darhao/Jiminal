@@ -23,7 +23,7 @@ import cc.darhao.jiminal.core.BasePackage;
 import cc.darhao.jiminal.core.SyncCommunicator;
 import cc.darhao.jiminal.entity.JustForTestControlPackage;
 import cc.darhao.jiminal.entity.JustForTestControlReplyPackage;
-import cc.darhao.jiminal.util.FieldUtil;
+import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 套接字单元测试

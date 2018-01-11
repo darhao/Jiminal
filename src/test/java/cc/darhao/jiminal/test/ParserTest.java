@@ -21,7 +21,7 @@ import cc.darhao.jiminal.exception.PackageParseException;
 import cc.darhao.jiminal.exception.ProtocolNotMatchException;
 import cc.darhao.jiminal.exception.runtime.EnumClassNotFoundException;
 import cc.darhao.jiminal.exception.runtime.ReplyPackageNotMatchException;
-import cc.darhao.jiminal.util.FieldUtil;
+import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 解析器单元测试

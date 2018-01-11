@@ -19,10 +19,10 @@ import cc.darhao.jiminal.entity.JustForTestHeartPackage;
 import cc.darhao.jiminal.entity.JustForTestHeartReplyPackage;
 import cc.darhao.jiminal.entity.JustForTestLoginPackage;
 import cc.darhao.jiminal.entity.JustForTestLoginReplyPackage;
-import cc.darhao.jiminal.util.BytesParser;
-import cc.darhao.jiminal.util.CRC16Util;
-import cc.darhao.jiminal.util.ClassScanner;
-import cc.darhao.jiminal.util.FieldUtil;
+import cc.darhao.dautils.api.BytesParser;
+import cc.darhao.dautils.api.CRC16Util;
+import cc.darhao.dautils.api.ClassScanner;
+import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 工具方法单元测试
