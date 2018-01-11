@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.darhao.jiminal.callback.OnPackageArrivedListener;
-import cc.darhao.jiminal.entity.BasePackage;
 import cc.darhao.jiminal.exception.PackageParseException;
 
 /**

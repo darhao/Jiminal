@@ -10,7 +10,6 @@ import java.util.Set;
 
 import cc.darhao.jiminal.annotation.Parse;
 import cc.darhao.jiminal.annotation.Protocol;
-import cc.darhao.jiminal.entity.BasePackage;
 import cc.darhao.jiminal.exception.CRCException;
 import cc.darhao.jiminal.exception.EnumValueNotExistException;
 import cc.darhao.jiminal.exception.PackageParseException;

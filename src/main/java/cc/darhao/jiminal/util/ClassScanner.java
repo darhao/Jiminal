@@ -25,6 +25,7 @@ public class ClassScanner {
 	 * @return 类列表
 	 */
 	public static List<Class> searchClass(String packagePath){
+		System.out.println(ClassScanner.class.getResource("/"));
 		//创建返回集
 		List<Class> classes = new ArrayList<Class>();
 		if(ClassScanner.class.getResource("/") == null) {

@@ -2,7 +2,7 @@ package cc.darhao.jiminal.callback;
 
 import java.io.IOException;
 
-import cc.darhao.jiminal.entity.BasePackage;
+import cc.darhao.jiminal.core.BasePackage;
 
 /**
  * 包到达监听器

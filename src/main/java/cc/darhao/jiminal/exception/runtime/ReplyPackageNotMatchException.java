@@ -1,6 +1,6 @@
 package cc.darhao.jiminal.exception.runtime;
 
-import cc.darhao.jiminal.entity.BasePackage;
+import cc.darhao.jiminal.core.BasePackage;
 import cc.darhao.jiminal.util.FieldUtil;
 
 /**
