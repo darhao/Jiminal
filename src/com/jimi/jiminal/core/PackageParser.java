@@ -274,8 +274,9 @@ public class PackageParser {
 				try {
 					//创建对象
 					BasePackage r = (BasePackage) cls.newInstance();
-					//复制信息序列号
+					//复制信息序列号、协议
 					r.serialNo = p.serialNo;
+					r.protocol = p.protocol;
 					return r;
 				} catch (ReflectiveOperationException e) {
 					e.printStackTrace();
