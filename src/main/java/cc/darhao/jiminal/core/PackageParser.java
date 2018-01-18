@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.darhao.dautils.api.BytesParser;
+import cc.darhao.dautils.api.CRC16Util;
+import cc.darhao.dautils.api.FieldUtil;
 import cc.darhao.jiminal.annotation.Parse;
 import cc.darhao.jiminal.annotation.Protocol;
 import cc.darhao.jiminal.exception.CRCException;
@@ -16,10 +19,6 @@ import cc.darhao.jiminal.exception.PackageParseException;
 import cc.darhao.jiminal.exception.ProtocolNotMatchException;
 import cc.darhao.jiminal.exception.runtime.EnumClassNotFoundException;
 import cc.darhao.jiminal.exception.runtime.ReplyPackageNotMatchException;
-import cc.darhao.dautils.api.BytesParser;
-import cc.darhao.dautils.api.CRC16Util;
-import cc.darhao.dautils.api.ClassScanner;
-import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 包序列号和反序列化工具类
@@ -28,13 +27,52 @@ import cc.darhao.dautils.api.FieldUtil;
 public class PackageParser {
 
 	/**
+	 * 初始化包的基本信息（基本信息包括：长度、协议名）
+	 * @param p 需要进行初始化的包对象
+	 */
+	public static void initPackageInfo(BasePackage p) {
+		//计算长度（已知长度：协议号+信息序列号+校验位=5）
+		byte length = 5;
+		//创建用于存储Boolean类型字段字节编号的Set
+		Set<Integer> byteNoSet = new HashSet<Integer>();
+		for (Field field : p.getClass().getDeclaredFields()) {
+			//过滤没有注解的字段
+			Parse parse = field.getAnnotation(Parse.class);
+			if(parse != null) {
+				if(field.getType().equals(Boolean.class) || field.getType().getName().equals("boolean")) {
+					byteNoSet.add(parse.value()[0]);
+				}else {
+					length += parse.value()[1];
+				}
+			}
+		}
+		length += byteNoSet.size();
+		p.length = length;
+		//解析协议名
+		String protocolName = p.getClass().getSimpleName()
+				.substring(0, p.getClass().getSimpleName().replaceAll("Reply", "").indexOf("Package"));
+		p.protocol = protocolName;
+	}
+	
+	
+	/**
+	 * 对字节集进行CRC校验，无误返回true
+	 */
+	public static boolean crc(List<Byte> bytes) {
+		short calculationResults = CRC16Util.CRC16_X25(bytes.subList(0, bytes.size() - 2));
+		short record = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
+		return calculationResults == record;
+	}
+
+
+	/**
 	 * 把字节集解析成包
 	 * @param isReplyPackage 该布尔值用于区分被解析字节集是正常包还是回复包
 	 * @throws CRCException  CRC校验失败时抛出
 	 * @throws ProtocolNotMatchException 协议未能匹配时抛出
 	 * @throws EnumValueNotExistException 
 	 */
-	public static BasePackage parse(List<Byte> bytes , String packagePath , boolean isReplyPackage) throws PackageParseException {
+	public static BasePackage parse(List<Byte> bytes , List<Class> classes , boolean isReplyPackage) throws PackageParseException {
 		if(!crc(bytes)) {
 			throw new CRCException(bytes);
 		}
@@ -47,7 +85,7 @@ public class PackageParser {
 		byte protocalType = bytes.get(1);
 		//获取信息内容字节列表
 		List<Byte> bodyBytes = bytes.subList(2, bytes.size() - 4);
-		for (Class cls : ClassScanner.searchClass(packagePath)) {
+		for (Class cls : classes) {
 			//匹配协议包
 			Protocol protocol = (Protocol) cls.getAnnotation(Protocol.class);
 			if(protocol == null) {
@@ -148,9 +186,9 @@ public class PackageParser {
 	/**
 	 * 把包序列化成字节集
 	 */
-	public static List<Byte> serialize(BasePackage p, String packagePath){
+	public static List<Byte> serialize(BasePackage p){
 		//初始化父类信息
-		initPackageInfo(p, packagePath);
+		initPackageInfo(p);
 		//创建字节集
 		List<Byte> bytes = new ArrayList<Byte>();
 		//序列化长度
@@ -244,6 +282,9 @@ public class PackageParser {
 		List<Byte> serialNoBytes = BytesParser.parseIntegerToBytes(p.serialNo);
 		if(serialNoBytes.size() == 1) {
 			serialNoBytes.add(0, (byte) 0x00);
+		}else if(serialNoBytes.size() == 4) {
+			serialNoBytes.remove(0);
+			serialNoBytes.remove(0);
 		}
 		bytes.addAll(serialNoBytes);
 		//序列化crc
@@ -253,14 +294,14 @@ public class PackageParser {
 		bytes.addAll(crcData);
 		return bytes;
 	}
-	
-	
+
+
 	/**
 	 * 根据包，构建回复包实例，并复制信息序列号
 	 */
-	public static BasePackage createReplyPackage(BasePackage p, String packagePath) {
+	public static BasePackage createReplyPackage(BasePackage p,  List<Class> classes) {
 		//根据类名匹配回复包类
-		for (Class cls : ClassScanner.searchClass(packagePath)) {
+		for (Class cls : classes) {
 			//匹配
 			String string1 = cls.getSimpleName();
 			if(!string1.contains("ReplyPackage")) {
@@ -283,45 +324,6 @@ public class PackageParser {
 			}
 		}
 		throw new ReplyPackageNotMatchException(p);
-	}
-	
-	
-	/**
-	 * 初始化包的基本信息（基本信息包括：长度、协议名）
-	 * @param p 需要进行初始化的包对象
-	 */
-	public static void initPackageInfo(BasePackage p, String packagePath) {
-		//计算长度（已知长度：协议号+信息序列号+校验位=5）
-		byte length = 5;
-		//创建用于存储Boolean类型字段字节编号的Set
-		Set<Integer> byteNoSet = new HashSet<Integer>();
-		for (Field field : p.getClass().getDeclaredFields()) {
-			//过滤没有注解的字段
-			Parse parse = field.getAnnotation(Parse.class);
-			if(parse != null) {
-				if(field.getType().equals(Boolean.class) || field.getType().getName().equals("boolean")) {
-					byteNoSet.add(parse.value()[0]);
-				}else {
-					length += parse.value()[1];
-				}
-			}
-		}
-		length += byteNoSet.size();
-		p.length = length;
-		//解析协议名
-		String protocolName = p.getClass().getSimpleName()
-				.substring(0, p.getClass().getSimpleName().replaceAll("Reply", "").indexOf("Package"));
-		p.protocol = protocolName;
-	}
-	
-	
-	/**
-	 * 对字节集进行CRC校验，无误返回true
-	 */
-	public static boolean crc(List<Byte> bytes) {
-		short calculationResults = CRC16Util.CRC16_X25(bytes.subList(0, bytes.size() - 2));
-		short record = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
-		return calculationResults == record;
 	}
 
 

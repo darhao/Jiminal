@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.darhao.dautils.api.ClassScanner;
 import cc.darhao.jiminal.callback.OnPackageArrivedListener;
 import cc.darhao.jiminal.exception.PackageParseException;
 
@@ -99,6 +100,10 @@ public abstract class Communicator {
 	 */
 	protected String packagePath;
 	
+	/**
+	 * 通讯包类列表
+	 */
+	protected List<Class> packageClasses;
 	
 	/**
 	 *客户端 
@@ -148,6 +153,7 @@ public abstract class Communicator {
 		this.remotePort = remotePort;
 		this.localPort = localPort;
 		this.packagePath = packagePath;
+		this.packageClasses = ClassScanner.searchClass(packagePath);
 		this.serverAccpetClients = new ArrayList<Socket>();
 	}
 	
@@ -229,16 +235,16 @@ public abstract class Communicator {
 									bytes.remove(bytes.size() - 1);
 									bytes.remove(bytes.size() - 1);
 									//把bytes解析成Entity
-									BasePackage p = PackageParser.parse(bytes, packagePath, false);
+									BasePackage p = PackageParser.parse(bytes, packageClasses, false);
 									//构建回复包
-									BasePackage r = PackageParser.createReplyPackage(p, packagePath);					
+									BasePackage r = PackageParser.createReplyPackage(p, packageClasses);					
 									//设置ip
 									r.receiverIp = p.senderIp = threadSocketRemoteIp;
 //									r.senderIp = p.receiverIp = localIp;
 									//调用监听器方法
 									onPackageArrivedListener.onPackageArrived(p, r);
 									//回复对方
-									List<Byte> bytes = PackageParser.serialize(r, packagePath);
+									List<Byte> bytes = PackageParser.serialize(r);
 									//加上起始位和结束位
 									bytes.add(0, startFlags[0]);
 									bytes.add(1, startFlags[1]);
@@ -285,7 +291,7 @@ public abstract class Communicator {
 			serialNo = 0;
 		}
 		p.serialNo = serialNo++;
-		List<Byte> bytes = PackageParser.serialize(p, packagePath);
+		List<Byte> bytes = PackageParser.serialize(p);
 		// 加上起始位和结束位
 		bytes.add(0, startFlags[0]);
 		bytes.add(1, startFlags[1]);
@@ -322,7 +328,7 @@ public abstract class Communicator {
 				bytes.remove(bytes.size() - 1);
 				bytes.remove(bytes.size() - 1);
 				// 把bytes解析成Entity
-				BasePackage r = PackageParser.parse(bytes, packagePath, true);
+				BasePackage r = PackageParser.parse(bytes, packageClasses, true);
 				// 重置重试次数
 				retriedTimes = 0;
 				//设置ip
