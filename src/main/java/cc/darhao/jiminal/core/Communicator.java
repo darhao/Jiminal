@@ -317,16 +317,19 @@ public abstract class Communicator {
 		}
 		p.serialNo = serialNo++;
 		List<Byte> bytes = PackageParser.serialize(p);
-		//检测文中是否存在结束位，如果有则用去语义标识注释
-		byte a1, a2 = 0;
-		for (int i = 0; i < bytes.size(); i++) {
-			a1 = a2;
-			a2 = bytes.get(i);
-			if(a1 == endFlags[0] && a2 == endFlags[1]) {
-				bytes.add(i - 1, endInvalidFlags[0]);
-				bytes.add(i, endInvalidFlags[1]);
-				i += 2;
+		try {
+			//检测文中是否存在结束位，如果有则用去语义标识注释
+			byte a1, a2 = 0;
+			for (int i = 0; i < bytes.size(); i++) {
+				a1 = a2;
+				a2 = bytes.get(i);
+				if(a1 == endFlags[0] && a2 == endFlags[1]) {
+					bytes.add(i - 1, endInvalidFlags[0]);
+					bytes.add(i, endInvalidFlags[1]);
+					i += 2;
+				}
 			}
+		} catch (IndexOutOfBoundsException e3) {
 		}
 		// 加上起始位和结束位
 		bytes.add(0, startFlags[0]);
