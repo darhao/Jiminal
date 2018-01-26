@@ -94,6 +94,10 @@ public abstract class Communicator {
 	 */
 	protected byte[] endFlags = new byte[]{(byte) 0x0D, (byte) 0x0A};
 	
+	/**
+	 * 结束标志位的去语义位（如果文中出现结束标志位，则会用该标志作为前缀，注释掉结束标志位）
+	 */
+	protected byte[] endInvalidFlags = new byte[]{(byte) 0xFF, (byte) 0xFF};
 	
 	/**
 	 * 通讯包类的包名
@@ -220,22 +224,31 @@ public abstract class Communicator {
 								if(isContent) {
 									bytes.add((byte) b2);
 								}
-								//判断流结束
-								if(b2 == -1) {
-									break;
-								}
 								//判断包头
 								if(b1 == startFlags[0] && b2 == startFlags[1]) {
 									isContent = true;
-									bytes.clear();
 								}
 								//判断包尾
 								if(b1 == endFlags[0] && b2 == endFlags[1]) {
+									//判断前两个字节是否是去语义标识符
+									try {
+										byte e1 = bytes.get(bytes.size() - 4);
+										byte e2 = bytes.get(bytes.size() - 3);
+										if(e1 ==  endInvalidFlags[0] && e2 == endInvalidFlags[1]) {
+											//去掉去语义标识符
+											bytes.remove(bytes.size() - 3);
+											bytes.remove(bytes.size() - 3);
+											//返回主循环
+											continue;
+										}
+									}catch (IndexOutOfBoundsException e) {
+									}
 									isContent = false;
 									bytes.remove(bytes.size() - 1);
 									bytes.remove(bytes.size() - 1);
 									//把bytes解析成Entity
 									BasePackage p = PackageParser.parse(bytes, packageClasses, false);
+									bytes.clear();
 									//构建回复包
 									BasePackage r = PackageParser.createReplyPackage(p, packageClasses);					
 									//设置ip
@@ -244,14 +257,25 @@ public abstract class Communicator {
 									//调用监听器方法
 									onPackageArrivedListener.onPackageArrived(p, r);
 									//回复对方
-									List<Byte> bytes = PackageParser.serialize(r);
+									List<Byte> rBytes = PackageParser.serialize(r);
+									//检测文中是否存在结束位，如果有则用去语义标识注释
+									byte a1, a2 = 0;
+									for (int i = 0; i < rBytes.size(); i++) {
+										a1 = a2;
+										a2 = rBytes.get(i);
+										if(a1 == endFlags[0] && a2 == endFlags[1]) {
+											rBytes.add(i - 1, endInvalidFlags[0]);
+											rBytes.add(i, endInvalidFlags[1]);
+											i += 2;
+										}
+									}
 									//加上起始位和结束位
-									bytes.add(0, startFlags[0]);
-									bytes.add(1, startFlags[1]);
-									bytes.add(endFlags[0]);
-									bytes.add(endFlags[1]);
+									rBytes.add(0, startFlags[0]);
+									rBytes.add(1, startFlags[1]);
+									rBytes.add(endFlags[0]);
+									rBytes.add(endFlags[1]);
 									//发送
-									for (Byte b : bytes) {
+									for (Byte b : rBytes) {
 										System.err.print(Integer.toHexString(b) + " ");
 										socket.getOutputStream().write(b);
 									}
@@ -260,8 +284,9 @@ public abstract class Communicator {
 							} catch (IOException e) {
 								onPackageArrivedListener.onCatchIOException(e);
 								return;
-							} catch (PackageParseException e) {
+							} catch (PackageParseException | IndexOutOfBoundsException e) {
 								e.printStackTrace();
+								bytes.clear();
 							}
 						}
 					}
@@ -292,6 +317,17 @@ public abstract class Communicator {
 		}
 		p.serialNo = serialNo++;
 		List<Byte> bytes = PackageParser.serialize(p);
+		//检测文中是否存在结束位，如果有则用去语义标识注释
+		byte a1, a2 = 0;
+		for (int i = 0; i < bytes.size(); i++) {
+			a1 = a2;
+			a2 = bytes.get(i);
+			if(a1 == endFlags[0] && a2 == endFlags[1]) {
+				bytes.add(i - 1, endInvalidFlags[0]);
+				bytes.add(i, endInvalidFlags[1]);
+				i += 2;
+			}
+		}
 		// 加上起始位和结束位
 		bytes.add(0, startFlags[0]);
 		bytes.add(1, startFlags[1]);
@@ -304,40 +340,52 @@ public abstract class Communicator {
 		}
 		System.out.println();
 		// 接收回复包
+		bytes = new ArrayList<Byte>();
 		while (true) {
-			// 读一个字节，缓存一个字节
-			b1 = b2;
-			b2 = (byte) client.getInputStream().read();
-			System.out.print(Integer.toHexString(b2) + " ");
-			// 判断正文
-			if (isContent) {
-				bytes.add((byte) b2);
-			}
-			// 判断流结束
-			if (b2 == -1) {
-				break;
-			}
-			// 判断包头
-			if (b1 == startFlags[0] && b2 == startFlags[1]) {
-				isContent = true;
-				bytes.clear();
-			}
-			// 判断包尾
-			if (b1 == endFlags[0] && b2 == endFlags[1]) {
-				isContent = false;
-				bytes.remove(bytes.size() - 1);
-				bytes.remove(bytes.size() - 1);
-				// 把bytes解析成Entity
-				BasePackage r = PackageParser.parse(bytes, packageClasses, true);
-				// 重置重试次数
-				retriedTimes = 0;
-				//设置ip
-//				r.receiverIp = p.senderIp = localIp;
-				r.senderIp = p.receiverIp = remoteIp;
-				return r;
+			try {
+				// 读一个字节，缓存一个字节
+				b1 = b2;
+				b2 = (byte) client.getInputStream().read();
+				System.out.print(Integer.toHexString(b2) + " ");
+				// 判断正文
+				if (isContent) {
+					bytes.add((byte) b2);
+				}
+				// 判断包头
+				if (b1 == startFlags[0] && b2 == startFlags[1]) {
+					isContent = true;
+				}
+				// 判断包尾
+				if (b1 == endFlags[0] && b2 == endFlags[1]) {
+					//判断前两个字节是否是去语义标识符
+					try {
+						byte e1 = bytes.get(bytes.size() - 4);
+						byte e2 = bytes.get(bytes.size() - 3);
+						if(e1 ==  endInvalidFlags[0] && e2 == endInvalidFlags[1]) {
+							//去掉去语义标识符
+							bytes.remove(bytes.size() - 3);
+							bytes.remove(bytes.size() - 3);
+							//返回主循环
+							continue;
+						}
+					}catch (IndexOutOfBoundsException e) {
+					}
+					isContent = false;
+					bytes.remove(bytes.size() - 1);
+					bytes.remove(bytes.size() - 1);
+					// 把bytes解析成Entity
+					BasePackage r = PackageParser.parse(bytes, packageClasses, true);
+					// 重置重试次数
+					retriedTimes = 0;
+					//设置ip
+					//r.receiverIp = p.senderIp = localIp;
+					r.senderIp = p.receiverIp = remoteIp;
+					return r;
+				}
+			} catch (IndexOutOfBoundsException e) {
+				e.printStackTrace();
 			}
 		}
-		return null;
 	}
 	
 	

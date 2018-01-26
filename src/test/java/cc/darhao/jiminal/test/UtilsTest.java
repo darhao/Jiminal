@@ -19,6 +19,7 @@ import cc.darhao.jiminal.entity.JustForTestHeartPackage;
 import cc.darhao.jiminal.entity.JustForTestHeartReplyPackage;
 import cc.darhao.jiminal.entity.JustForTestLoginPackage;
 import cc.darhao.jiminal.entity.JustForTestLoginReplyPackage;
+import cc.darhao.jiminal.entity.JustForTestTextPackage;
 import cc.darhao.dautils.api.BytesParser;
 import cc.darhao.dautils.api.CRC16Util;
 import cc.darhao.dautils.api.ClassScanner;
@@ -158,6 +159,7 @@ public class UtilsTest {
 		classes2.add(JustForTestHeartReplyPackage.class);
 		classes2.add(JustForTestLoginPackage.class);
 		classes2.add(JustForTestLoginReplyPackage.class);
+		classes2.add(JustForTestTextPackage.class);
 		Assert.assertArrayEquals(classes.toArray(), classes2.toArray());
 	}
 	
@@ -177,7 +179,7 @@ public class UtilsTest {
 	
 	@Test
 	public void parseStringToBytes() {
-		List<Byte> bytes = BytesParser.parseStringToBytes("80 78 20 DE CD 0B");
+		List<Byte> bytes = BytesParser.parseHexStringToBytes("80 78 20 DE CD 0B");
 		List<Byte> bytes2 = Arrays.asList(new Byte[] {(byte) 0x80, 0x78, 0x20, (byte) 0xDE, (byte) 0xCD, 0x0B});
 		Assert.assertArrayEquals(bytes.toArray(), bytes2.toArray());
 	}
@@ -185,7 +187,7 @@ public class UtilsTest {
 	@Test
 	public void parseBytesToString() {
 		List<Byte> bytes2 = Arrays.asList(new Byte[] {0x00, (byte) 0x98, 0x20, 0x2E, 0x2D, 0x3B});
-		String result = BytesParser.parseBytesToString(bytes2);
+		String result = BytesParser.parseBytesToHexString(bytes2);
 		Assert.assertEquals(result, "00 98 20 2E 2D 3B");
 	}
 	

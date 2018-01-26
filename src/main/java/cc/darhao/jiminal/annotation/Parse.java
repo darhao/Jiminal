@@ -28,4 +28,10 @@ public @interface Parse{
 	 */
 	boolean sign() default false;
 	
+	
+	/**
+	 * 只对类型为String的字段有效，true表示为该字符串会用UTF-8码解析成文本，
+	 * <br>false表示该字符串将直接表示为一串十六进制的哈希字符串，默认为false<br>
+	 */
+	boolean utf8() default false;
 }

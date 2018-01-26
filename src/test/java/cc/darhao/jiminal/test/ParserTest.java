@@ -1,5 +1,6 @@
 package cc.darhao.jiminal.test;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import cc.darhao.dautils.api.ClassScanner;
+import cc.darhao.dautils.api.FieldUtil;
 import cc.darhao.jiminal.constant.JustForTestLine;
 import cc.darhao.jiminal.core.BasePackage;
 import cc.darhao.jiminal.core.PackageParser;
@@ -16,14 +19,13 @@ import cc.darhao.jiminal.entity.JustForTestBoardNumPackage;
 import cc.darhao.jiminal.entity.JustForTestBoardNumReplyPackage;
 import cc.darhao.jiminal.entity.JustForTestControlReplyPackage;
 import cc.darhao.jiminal.entity.JustForTestHeartPackage;
+import cc.darhao.jiminal.entity.JustForTestTextPackage;
 import cc.darhao.jiminal.exception.CRCException;
 import cc.darhao.jiminal.exception.EnumValueNotExistException;
 import cc.darhao.jiminal.exception.PackageParseException;
 import cc.darhao.jiminal.exception.ProtocolNotMatchException;
 import cc.darhao.jiminal.exception.runtime.EnumClassNotFoundException;
 import cc.darhao.jiminal.exception.runtime.ReplyPackageNotMatchException;
-import cc.darhao.dautils.api.ClassScanner;
-import cc.darhao.dautils.api.FieldUtil;
 
 /**
  * 解析器单元测试
@@ -33,8 +35,24 @@ import cc.darhao.dautils.api.FieldUtil;
  */
 public class ParserTest{
 
-	private List<Class> packageClasses = ClassScanner.searchClass("cc.darhao.jiminal.entity");
+	private static List<Class> packageClasses = ClassScanner.searchClass("cc.darhao.jiminal.entity");
 
+	
+	@Test
+	public void utf8Test() throws PackageParseException, UnsupportedEncodingException {
+		String test = "你好世界";
+		byte[] test2 = test.getBytes("UTF-8");
+		String test3 = new String(test2, "UTF-8");
+		Assert.assertEquals("你好世界", test3);
+		List<Byte> bytes = Arrays.asList(new Byte[] {0x15, 0x03 , (byte) 0xe4 , (byte) 0xbd , (byte) 0xa0 , (byte) 0xe5 , (byte) 0xa5 , 
+				(byte) 0xbd , (byte) 0xe4 , (byte) 0xb8 ,(byte) 0x96 , (byte) 0xe7 , (byte) 0x95 , (byte) 0x8c , (byte) 0xFE , 
+				(byte) 0xFE , (byte) 0xFE , (byte)0xFE, 0x00 , 0x00 , (byte) 0x45, (byte) 0x36});
+		JustForTestTextPackage testTextPackage = (JustForTestTextPackage) PackageParser.parse(bytes, packageClasses, false);
+		List<Byte> bytes2 = PackageParser.serialize(testTextPackage);
+		Assert.assertArrayEquals(bytes.toArray(), bytes2.toArray());
+		Assert.assertEquals("你好世界", testTextPackage.getContent());
+	}
+	
 	
 	@Test
 	public void crc() {

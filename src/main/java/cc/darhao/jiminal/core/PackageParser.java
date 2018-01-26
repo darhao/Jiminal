@@ -1,8 +1,10 @@
 package cc.darhao.jiminal.core;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -125,9 +127,8 @@ public class PackageParser {
 							bs =  bodyBytes.subList(a, a+b);
 							//拷贝为可写List
 							List<Byte> writableList = new ArrayList<Byte>();
-							for (Byte b1 : bs) {
-								writableList.add(b1);
-							}
+							Collections.addAll(writableList, new Byte[bs.size()]);
+							Collections.copy(writableList, bs);
 							//判断是否有符号：如果有
 							if(parse.sign()) {
 								//获取符号位：如果为负
@@ -143,8 +144,27 @@ public class PackageParser {
 							field.set(target, number);
 							break;
 						case "java.lang.String":
+							String string = "";
 							bs =  bodyBytes.subList(a, a+b);
-							String string = BytesParser.parseBytesToString(bs);
+							//判断转换成哈希串还是字符串
+							if(parse.utf8()) {
+								try {
+									//判断尾部0xFE
+									int endFlag = 0;
+									for (int i = 0; i < bs.size(); i++) {
+										if(bs.get(i) == 0xFFFFFFFE) {
+											endFlag = i;
+											break;
+										}
+									}
+									byte[] data = BytesParser.cast(bs.subList(0, endFlag));
+									string = new String(data, "UTF-8");
+								} catch (UnsupportedEncodingException e) {
+									e.printStackTrace();
+								}
+							}else {
+								string = BytesParser.parseBytesToHexString(bs);
+							}
 							field.set(target, string);
 							break;
 						case "boolean":
@@ -175,6 +195,8 @@ public class PackageParser {
 					return target;
 				} catch (ReflectiveOperationException e) {
 					e.printStackTrace();
+				}catch (IndexOutOfBoundsException e) {
+					throw new PackageParseException(bytes);
 				}
 			}
 		}
@@ -235,9 +257,31 @@ public class PackageParser {
 					break;
 				case "java.lang.String":
 					String string = (String) field.get(p);
-					List<Byte> stringData = BytesParser.parseStringToBytes(string);
-					for (int i = 0; i < stringData.size(); i++) {
-						bodyBytes.set(a+i, stringData.get(i));
+					//判断是哈希串还是字符串
+					if(parse.utf8()) {
+						try {
+							//填充0xFE
+							for (int i = 0; i < b; i++) {
+								bodyBytes.set(a+i, (byte) 0xFE);
+							}
+							//编码
+							byte[] bs = string.getBytes("UTF-8");
+							//替换0xFE
+							for (int i = 0; i < b; i++) {
+								try {
+									bodyBytes.set(a+i, bs[i]);
+								} catch (IndexOutOfBoundsException e) {
+									break;
+								}
+							}
+						} catch (UnsupportedEncodingException e) {
+							e.printStackTrace();
+						}
+					}else {
+						List<Byte> stringData = BytesParser.parseHexStringToBytes(string);
+						for (int i = 0; i < b; i++) {
+							bodyBytes.set(a+i, stringData.get(i));
+						}
 					}
 					break;
 				case "boolean":

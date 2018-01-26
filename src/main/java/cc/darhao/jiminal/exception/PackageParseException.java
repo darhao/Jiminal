@@ -13,7 +13,7 @@ import cc.darhao.dautils.api.BytesParser;
 public class PackageParseException extends Exception {
 
 	public PackageParseException(List<Byte> bytes) {
-		super(BytesParser.parseBytesToString(bytes));
+		super(BytesParser.parseBytesToHexString(bytes));
 	}
 	
 }

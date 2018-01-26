@@ -61,4 +61,13 @@ public class JustForTestHeartPackage extends BasePackage {
 		this.isInfraredEnabled = isInfraredEnabled;
 	}
 
+	public JustForTestLine getJustForTestLine() {
+		return justForTestLine;
+	}
+
+	public void setJustForTestLine(JustForTestLine justForTestLine) {
+		this.justForTestLine = justForTestLine;
+	}
+
+	
 }
