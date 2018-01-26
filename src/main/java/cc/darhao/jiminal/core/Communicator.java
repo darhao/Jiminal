@@ -207,11 +207,13 @@ public abstract class Communicator {
 				//创建单独线程
 				new Thread("服务子线程") {
 					
-					private String threadSocketRemoteIp = ((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().toString().replace("/", "");
-					private Socket threadSocket = socket;
-					private boolean isContent = false;
-					ArrayList<Byte> bytes = new ArrayList<Byte>();
+					String threadSocketRemoteIp = ((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().toString().replace("/", "");
+					Socket threadSocket = socket;
+					boolean isContent = false;
+					List<Byte> bytes = new ArrayList<Byte>();
 					byte b1, b2 = -2;
+					//0xFF连续次数超过64次将认为远程设备已断开连接
+					int remoteOfflineFlagsCount = 0;
 					
 					public void run() {
 						while(true) {
@@ -220,6 +222,15 @@ public abstract class Communicator {
 								b1 = b2;
 								b2 = (byte) threadSocket.getInputStream().read();
 								System.out.print(Integer.toHexString(b2) + " ");
+								//判断是否是FF
+								if(b2 == -1) {
+									remoteOfflineFlagsCount++;
+									if(remoteOfflineFlagsCount == 64) {
+										break;
+									}
+								}else {
+									remoteOfflineFlagsCount = 0;
+								}
 								//判断正文
 								if(isContent) {
 									bytes.add((byte) b2);
@@ -344,12 +355,23 @@ public abstract class Communicator {
 		System.out.println();
 		// 接收回复包
 		bytes = new ArrayList<Byte>();
+		//0xFF连续次数超过64次将认为远程设备已断开连接
+		int remoteOfflineFlagsCount = 0;
 		while (true) {
 			try {
 				// 读一个字节，缓存一个字节
 				b1 = b2;
 				b2 = (byte) client.getInputStream().read();
 				System.out.print(Integer.toHexString(b2) + " ");
+				//判断是否是FF
+				if(b2 == -1) {
+					remoteOfflineFlagsCount++;
+					if(remoteOfflineFlagsCount == 64) {
+						throw new IOException("远程设备已断开连接");
+					}
+				}else {
+					remoteOfflineFlagsCount = 0;
+				}
 				// 判断正文
 				if (isContent) {
 					bytes.add((byte) b2);
