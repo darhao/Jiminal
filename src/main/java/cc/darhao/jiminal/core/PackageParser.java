@@ -247,9 +247,14 @@ public class PackageParser {
 				case "java.lang.Integer":
 					int number = (int) field.get(p);
 					List<Byte> numberData = BytesParser.parseIntegerToBytes(number);
-					//根据字段长度截取整数
+					//过长则截取，过短则补零
 					if(numberData.size() >= b) {
 						numberData = numberData.subList(numberData.size() - b, numberData.size());
+					}else {
+						int size = numberData.size();
+						for (int i = 0; i < b - size; i++) {
+							numberData.add(0, (byte) 0x00);
+						}
 					}
 					for (int i = 0; i < numberData.size(); i++) {
 						bodyBytes.set(a+i, numberData.get(i));
