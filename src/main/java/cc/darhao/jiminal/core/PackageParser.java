@@ -13,6 +13,7 @@ import java.util.Set;
 import cc.darhao.dautils.api.BytesParser;
 import cc.darhao.dautils.api.CRC16Util;
 import cc.darhao.dautils.api.FieldUtil;
+import cc.darhao.dautils.api.StringUtil;
 import cc.darhao.jiminal.annotation.Parse;
 import cc.darhao.jiminal.annotation.Protocol;
 import cc.darhao.jiminal.exception.CRCException;
@@ -329,17 +330,14 @@ public class PackageParser {
 		bytes.addAll(bodyBytes);
 		//序列化信息序列号（如果序列号为255以下则高位补零）
 		List<Byte> serialNoBytes = BytesParser.parseIntegerToBytes(p.serialNo);
-		if(serialNoBytes.size() == 1) {
-			serialNoBytes.add(0, (byte) 0x00);
-		}else if(serialNoBytes.size() == 4) {
-			serialNoBytes.remove(0);
-			serialNoBytes.remove(0);
-		}
+		String temp = StringUtil.stretch(StringUtil.fixLength(StringUtil.press(BytesParser.parseBytesToHexString(serialNoBytes)), 4), 2);
+		serialNoBytes = BytesParser.parseHexStringToBytes(temp);
 		bytes.addAll(serialNoBytes);
 		//序列化crc
 		List<Byte> crcData = BytesParser.parseIntegerToBytes(CRC16Util.CRC16_X25(bytes));
 		//如果有4个字节则去掉前两个
-		crcData = crcData.subList(crcData.size() - 2, crcData.size());
+		temp = StringUtil.stretch(StringUtil.fixLength(StringUtil.press(BytesParser.parseBytesToHexString(crcData)), 4), 2);
+		crcData = BytesParser.parseHexStringToBytes(temp);
 		bytes.addAll(crcData);
 		return bytes;
 	}
