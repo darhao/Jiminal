@@ -592,6 +592,26 @@ public abstract class Communicator {
 		this.endFlags[1] = (byte) b2;
 	}
 
+	
+	/**
+	 * 获取结束标志位去语义位
+	 * @return
+	 */
+	public byte[] getEndInvalidFlags() {
+		return endInvalidFlags;
+	}
+
+
+	/**
+	 * 设置结束标志位去语义位
+	 * @param b1
+	 * @param b2
+	 */
+	public void setEndInvalidFlags(int b1, int b2) {
+		this.endInvalidFlags[0] = (byte) b1;
+		this.endInvalidFlags[1] = (byte) b2;
+	}
+	
 
 	/**
 	 * 获取通讯包类的包名
