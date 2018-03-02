@@ -4,7 +4,7 @@ import cc.darhao.jiminal.annotation.Parse;
 import cc.darhao.jiminal.annotation.Protocol;
 import cc.darhao.jiminal.constant.JustForTestClientDevice;
 import cc.darhao.jiminal.constant.JustForTestControlResult;
-import cc.darhao.jiminal.constant.JustForTestReturnCode;
+import cc.darhao.jiminal.constant.JustForTestErrorCode;
 import cc.darhao.jiminal.core.BasePackage;
 
 @Protocol(0x43)
@@ -15,7 +15,7 @@ public class JustForTestControlReplyPackage extends BasePackage {
 	@Parse({ 1, 1 })
 	private JustForTestControlResult justForTestControlResult;
 	@Parse({ 2, 1 })
-	private JustForTestReturnCode justForTestReturnCode;
+	private JustForTestErrorCode justForTestErrorCode;
 
 	public JustForTestClientDevice getClientDevice() {
 		return justForTestClientDevice;
@@ -25,12 +25,12 @@ public class JustForTestControlReplyPackage extends BasePackage {
 		this.justForTestClientDevice = justForTestClientDevice;
 	}
 
-	public JustForTestReturnCode getReturnCode() {
-		return justForTestReturnCode;
+	public JustForTestErrorCode getErrorCode() {
+		return justForTestErrorCode;
 	}
 
-	public void setReturnCode(JustForTestReturnCode justForTestReturnCode) {
-		this.justForTestReturnCode = justForTestReturnCode;
+	public void setErrorCode(JustForTestErrorCode justForTestErrorCode) {
+		this.justForTestErrorCode = justForTestErrorCode;
 	}
 
 	public JustForTestControlResult getControlResult() {

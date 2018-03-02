@@ -29,7 +29,7 @@ import cc.darhao.jiminal.exception.PackageParseException;
  * 3.支持五种字段类型：字符串、布尔、整数、日期、枚举，分别对应的java类型为String, boolean, int, Date, Enum
  * <br>编写枚举类型时，枚举元素的顺序需要对应协议的值顺序，如：<br>
  * <pre>
-public enum ReturnCode {
+public enum ErrorCode {
 	SUCCEED,
 	RELAY_FAILURE,
 }

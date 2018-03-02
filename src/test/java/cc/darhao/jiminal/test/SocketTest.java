@@ -17,7 +17,7 @@ import cc.darhao.jiminal.constant.JustForTestControlResult;
 import cc.darhao.jiminal.constant.JustForTestControlledDevice;
 import cc.darhao.jiminal.constant.JustForTestLine;
 import cc.darhao.jiminal.constant.JustForTestOperation;
-import cc.darhao.jiminal.constant.JustForTestReturnCode;
+import cc.darhao.jiminal.constant.JustForTestErrorCode;
 import cc.darhao.jiminal.core.AsyncCommunicator;
 import cc.darhao.jiminal.core.BasePackage;
 import cc.darhao.jiminal.core.SyncCommunicator;
@@ -63,7 +63,7 @@ public class SocketTest {
 					justForTestControlReplyPackage = (JustForTestControlReplyPackage) r;
 					justForTestControlReplyPackage.setClientDevice(((JustForTestControlPackage) p).getClientDevice());
 					justForTestControlReplyPackage.setControlResult(JustForTestControlResult.SUCCEED);
-					justForTestControlReplyPackage.setReturnCode(JustForTestReturnCode.SUCCEED);
+					justForTestControlReplyPackage.setErrorCode(JustForTestErrorCode.SUCCEED);
 				}else {
 					Assert.fail("不是Control包");
 				}
@@ -220,7 +220,7 @@ public class SocketTest {
 					justForTestControlReplyPackage = (JustForTestControlReplyPackage) r;
 					justForTestControlReplyPackage.setClientDevice(((JustForTestControlPackage) p).getClientDevice());
 					justForTestControlReplyPackage.setControlResult(JustForTestControlResult.SUCCEED);
-					justForTestControlReplyPackage.setReturnCode(JustForTestReturnCode.SUCCEED);
+					justForTestControlReplyPackage.setErrorCode(JustForTestErrorCode.SUCCEED);
 				}else {
 					Assert.fail("不是Control包");
 				}
@@ -294,7 +294,7 @@ public class SocketTest {
 							justForTestControlReplyPackage = (JustForTestControlReplyPackage) r;
 							justForTestControlReplyPackage.setClientDevice(((JustForTestControlPackage) p).getClientDevice());
 							justForTestControlReplyPackage.setControlResult(JustForTestControlResult.SUCCEED);
-							justForTestControlReplyPackage.setReturnCode(JustForTestReturnCode.SUCCEED);
+							justForTestControlReplyPackage.setErrorCode(JustForTestErrorCode.SUCCEED);
 						}else {
 							Assert.fail("不是Control包");
 						}
