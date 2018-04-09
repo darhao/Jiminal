@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -167,18 +168,10 @@ public abstract class Communicator {
 	 * @throws IOException
 	 */
 	protected void connect() throws IOException {
-		client = new Socket(remoteIp, remotePort);
+		client = new Socket();
+		SocketAddress endpoint = new InetSocketAddress(remoteIp, remotePort);
+		client.connect(endpoint, timeout);
 		client.setSoTimeout(timeout);
-//		//告知对方其外网IP
-//		for (String s : remoteIp.split("\\.")) {
-//			client.getOutputStream().write(Integer.parseInt(s));
-//		}
-//		//获取本机外网IP
-//		String temp = "";
-//		for (int i = 0; i < 4; i++) {
-//			temp = temp + client.getInputStream().read() + " ";
-//		}
-//		localIp = temp.trim().replaceAll(" ", ".");
 	}
 	
 	
@@ -191,23 +184,13 @@ public abstract class Communicator {
 			while(true) {
 				//捕获socket
 				Socket socket = server.accept();
-//				//告知对方其外网IP
-//				String ip = ((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().toString().replace("/", "");
-//				for (String s : ip.split("\\.")) {
-//					socket.getOutputStream().write(Integer.parseInt(s));
-//				}
-//				//获取本机外网IP
-//				String temp = "";
-//				for (int i = 0; i < 4; i++) {
-//					temp = temp + socket.getInputStream().read() + " ";
-//				}
-//				localIp = temp.trim().replaceAll(" ", ".");
 				//存到列表中
 				serverAccpetClients.add(socket);
 				//创建单独线程
 				new Thread("服务子线程") {
 					
-					String threadSocketRemoteIp = ((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress().toString().replace("/", "");
+					String clientSocketIp = socket.getLocalAddress().getHostAddress();
+					String serverSocketIp = socket.getInetAddress().getHostAddress();
 					Socket threadSocket = socket;
 					boolean isContent = false;
 					List<Byte> bytes = new ArrayList<Byte>();
@@ -263,8 +246,8 @@ public abstract class Communicator {
 									//构建回复包
 									BasePackage r = PackageParser.createReplyPackage(p, packageClasses);					
 									//设置ip
-									r.receiverIp = p.senderIp = threadSocketRemoteIp;
-//									r.senderIp = p.receiverIp = localIp;
+									r.receiverIp = p.senderIp = clientSocketIp;
+									r.senderIp = p.receiverIp = serverSocketIp;
 									//调用监听器方法
 									onPackageArrivedListener.onPackageArrived(p, r);
 									//回复对方
@@ -403,8 +386,8 @@ public abstract class Communicator {
 					// 重置重试次数
 					retriedTimes = 0;
 					//设置ip
-					//r.receiverIp = p.senderIp = localIp;
-					r.senderIp = p.receiverIp = remoteIp;
+					r.receiverIp = p.senderIp = client.getLocalAddress().getHostAddress();
+					r.senderIp = p.receiverIp = client.getInetAddress().getHostAddress();
 					return r;
 				}
 			} catch (IndexOutOfBoundsException e) {
