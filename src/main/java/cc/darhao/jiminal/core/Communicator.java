@@ -209,6 +209,9 @@ public abstract class Communicator {
 								if(b2 == -1) {
 									remoteOfflineFlagsCount++;
 									if(remoteOfflineFlagsCount == 64) {
+										//双向关闭
+										socket.close();
+										serverAccpetClients.remove(socket);
 										break;
 									}
 								}else {
