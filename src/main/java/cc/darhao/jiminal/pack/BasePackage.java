@@ -1,4 +1,4 @@
-package cc.darhao.jiminal.core;
+package cc.darhao.jiminal.pack;
 
 /**
  * 通讯协议包基类
@@ -15,6 +15,7 @@ public class BasePackage {
 	 * 协议类型
 	 */
 	public String protocol = "";
+	
 	/**
 	 * 信息序列号
 	 */
@@ -23,15 +24,5 @@ public class BasePackage {
 	 * 错误校验码
 	 */
 	public Short crc;
-	
-	/**
-	 * 发送者ip
-	 */
-	public String senderIp = "";
-	
-	/**
-	 * 接受者ip
-	 */
-	public String receiverIp = "";
 	
 }

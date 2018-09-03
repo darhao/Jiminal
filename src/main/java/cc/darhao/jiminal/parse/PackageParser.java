@@ -1,4 +1,4 @@
-package cc.darhao.jiminal.core;
+package cc.darhao.jiminal.parse;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -16,15 +16,17 @@ import cc.darhao.dautils.api.FieldUtil;
 import cc.darhao.dautils.api.StringUtil;
 import cc.darhao.jiminal.annotation.Parse;
 import cc.darhao.jiminal.annotation.Protocol;
+import cc.darhao.jiminal.config.PackageConfig;
 import cc.darhao.jiminal.exception.CRCException;
 import cc.darhao.jiminal.exception.EnumValueNotExistException;
 import cc.darhao.jiminal.exception.PackageParseException;
 import cc.darhao.jiminal.exception.ProtocolNotMatchException;
 import cc.darhao.jiminal.exception.runtime.EnumClassNotFoundException;
 import cc.darhao.jiminal.exception.runtime.ReplyPackageNotMatchException;
+import cc.darhao.jiminal.pack.BasePackage;
 
 /**
- * 包序列号和反序列化工具类
+ * 包序列化和反序列化工具类
  * @author 沫熊工作室 <a href="http://www.darhao.cc">www.darhao.cc</a>
  */
 public class PackageParser {
@@ -75,7 +77,7 @@ public class PackageParser {
 	 * @throws ProtocolNotMatchException 协议未能匹配时抛出
 	 * @throws EnumValueNotExistException 
 	 */
-	public static BasePackage parse(List<Byte> bytes , List<Class> classes , boolean isReplyPackage) throws PackageParseException {
+	public static BasePackage parse(List<Byte> bytes, PackageConfig packageConfig) throws PackageParseException {
 		if(!crc(bytes)) {
 			throw new CRCException(bytes);
 		}
@@ -88,13 +90,13 @@ public class PackageParser {
 		byte protocalType = bytes.get(1);
 		//获取信息内容字节列表
 		List<Byte> bodyBytes = bytes.subList(2, bytes.size() - 4);
-		for (Class cls : classes) {
+		for (Class cls : packageConfig.getAll()) {
 			//匹配协议包
 			Protocol protocol = (Protocol) cls.getAnnotation(Protocol.class);
 			if(protocol == null) {
 				continue;
 			}
-			if((protocol.value() == protocalType) && (cls.getSimpleName().endsWith("ReplyPackage") == isReplyPackage)){
+			if((protocol.value() == protocalType) && (cls.getSimpleName().endsWith("ReplyPackage") == packageConfig.isOwner(cls))){
 				try {
 					//解析协议名
 					String protocolName = cls.getSimpleName()
@@ -346,9 +348,9 @@ public class PackageParser {
 	/**
 	 * 根据包，构建回复包实例，并复制信息序列号
 	 */
-	public static BasePackage createReplyPackage(BasePackage p,  List<Class> classes) {
+	public static BasePackage createReplyPackage(BasePackage p,  PackageConfig packageConfig) {
 		//根据类名匹配回复包类
-		for (Class cls : classes) {
+		for (Class cls : packageConfig.getAll()) {
 			//匹配
 			String string1 = cls.getSimpleName();
 			if(!string1.contains("ReplyPackage")) {
@@ -361,7 +363,7 @@ public class PackageParser {
 				try {
 					//创建对象
 					BasePackage r = (BasePackage) cls.newInstance();
-					//复制信息序列号、协议
+					//复制信息序列号和协议
 					r.serialNo = p.serialNo;
 					r.protocol = p.protocol;
 					return r;
