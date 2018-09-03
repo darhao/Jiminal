@@ -56,7 +56,7 @@ public class InterferenceTest {
 		PackageConfig packageConfig = new PackageConfig();
 		packageConfig.add(QPackage.class, true);
 		packageConfig.add(PPackage.class, false);
-		server = new JiminalServer(5017, packageConfig, new JiminalServerCallback() {
+		server = new JiminalServer(5018, packageConfig, new JiminalServerCallback() {
 			
 			@Override
 			public void onPackageArrived(BasePackage p, BasePackage r, Jiminal session) {
@@ -103,7 +103,7 @@ public class InterferenceTest {
 		PackageConfig packageConfig = new PackageConfig();
 		packageConfig.add(PPackage.class, true);
 		packageConfig.add(QPackage.class, false);
-		clientEndPoint = new Jiminal("127.0.0.1", 5017, packageConfig, new JiminalCallback() {
+		clientEndPoint = new Jiminal("127.0.0.1", 5018, packageConfig, new JiminalCallback() {
 			
 			@Override
 			public void onPackageArrived(BasePackage p, BasePackage r, Jiminal session) {
