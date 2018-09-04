@@ -39,6 +39,7 @@ public class JiminalServer {
 	/**
 	 * 创建一个通讯器
 	 * @param listenPort
+	 * @param packageConfig
 	 * @param callback
 	 */
 	public JiminalServer(int listenPort, PackageConfig packageConfig, JiminalServerCallback callback){
