@@ -139,23 +139,18 @@ public class Jiminal {
 	 * @throws IOException
 	 */
 	public void connect() {
-		realConnect();
-		//回调
-		((JiminalCallback)callback).onConnected();
-	}
-
-
-	private void realConnect() {
 		//连接服务器
 		SocketAddress endpoint = new InetSocketAddress(remoteIp, remotePort);
 		try {
 			socket.connect(endpoint);
+			//开启回复处理子线程
+			startReceiveThread();
+			//回调
+			((JiminalCallback)callback).onConnected();
 		} catch (IOException e) {
 			//回调
 			callback.onCatchException(e, this);
 		}
-		//开启回复处理子线程
-		startReceiveThread();
 	}
 
 
