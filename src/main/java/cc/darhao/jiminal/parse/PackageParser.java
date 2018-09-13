@@ -37,7 +37,7 @@ public class PackageParser {
 	 */
 	public static void initPackageInfo(BasePackage p) {
 		//计算长度（已知长度：协议号+信息序列号+校验位=5）
-		byte length = 5;
+		int length = 5;
 		//创建用于存储Boolean类型字段字节编号的Set
 		Set<Integer> byteNoSet = new HashSet<Integer>();
 		for (Field field : p.getClass().getDeclaredFields()) {
@@ -52,7 +52,7 @@ public class PackageParser {
 			}
 		}
 		length += byteNoSet.size();
-		p.length = length;
+		p.length = (byte) length;
 		//解析协议名
 		String protocolName = p.getClass().getSimpleName()
 				.substring(0, p.getClass().getSimpleName().replaceAll("Reply", "").indexOf("Package"));
@@ -221,8 +221,8 @@ public class PackageParser {
 		//序列化协议
 		bytes.add((byte) p.getClass().getAnnotation(Protocol.class).value());
 		//创建占位字节列表，长度为：包长度减去5
-		List<Byte> bodyBytes = new ArrayList<Byte>(p.length - 5);
-		for (int i = 0; i < p.length - 5; i++) {
+		List<Byte> bodyBytes = new ArrayList<Byte>(Byte.toUnsignedInt(p.length) - 5);
+		for (int i = 0; i < Byte.toUnsignedInt(p.length) - 5; i++) {
 			bodyBytes.add((byte) 0);
 		}
 		try {
