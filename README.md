@@ -1,3 +1,95 @@
+# Jiminal2.0 开发指南 #
+## 前言 ##
+
+
+- 本指南基于Jiminal1.x进行编写，新版SDK保留了1.x的协议格式，所以关于BasePackage的说明不再赘述，请参考：[https://github.com/darhao/Jiminal/wiki/About-Jiminal-1.x](https://github.com/darhao/Jiminal/wiki/About-Jiminal-1.x "传送门")  
+  
+
+
+- 使用方法更符合人体工程学，仿制了java.net.socket包下的设计模式。因为实现了全双工通讯，所以在使用前需要配置包的“来龙去脉”。  
+
+- 移除鸡肋的三次重连机制，改为一定时间内收不到回复包就断开连接并跑出异常的干练机制。
+
+##  配置包的“来龙去脉” ##
+使用PackageConfig对象来保存一种“某包是否是我方主动发送”的映射，并且把这个映射绑定到一个Jiminal对象中。  
+>     PackageConfig packageConfig = new PackageConfig();
+>     packageConfig.add(QPackage.class, true);
+>     packageConfig.add(PPackage.class, false);  
+
+
+具体参考文末API文档。
+
+
+## 创建服务器端 ##
+服务器端是用来监听客户端连接并实例化Jiminal对象的，类似Java API里的ServerSocket方法。创建一个服务器端实例，需要提供3个参数：  
+
+- 监听端口  
+- packageConfig对象  
+- 服务器端回调对象  
+
+第1、2个对象不需要多讲，第3个对象是一个接口，稍后讲解。  
+构造出服务器端对象JiminalServer后，即可调用它的listenConnect()方法开始监听客户端连接了！  
+> 该方法类似Java API里的ServerSocket.accpet()法，也是一个阻塞方法。  
+
+
+## 创建客户端 ##
+客户端的创建方法也很简单，直接使用构造函数即可，需要提供4个参数：
+
+- 服务器IP
+- 服务器端口  
+- packageConfig对象  
+- 客户端回调对象   
+
+前三个参数不多讲，最后一个参数是一个接口，稍后讲解。  
+构造出客户端对象Jiminal后，即可调用它的connect()方法进行连接服务器了！  
+
+## 回调对象介绍 ##
+Jiminal2.0使用了回调的设计模式进行开发。一共有两种回调对象：
+
+- 客户端回调对象 JiminalCallback
+	- onConnect():连接上服务器时回调
+- 服务器回调对象 JiminalServerCallback
+	- onCatchClient(Jiminal session):监听到客户端连接时回调，参数为连入的客户端实体  
+
+而它们均继承于JiminalBaseCallback，而这个接口由3个方法组成：
+
+	/**
+	 * 包到达时调用
+	 * @param p 对方发来的包
+	 * @param r 在该方法返回时，我方会回复对方的包
+	 * @param session 收到包的会话
+	 */
+	 void onPackageArrived(BasePackage p, BasePackage r, Jiminal session);
+	 
+
+	/**
+	 * 回复包到达时调用
+	 * @param r 对方发来的回复包
+	 * @param session 收到包的会话
+	 */
+	 void onReplyArrived(BasePackage r, Jiminal session);
+	 
+	 
+	/**
+	 * 会话遇到异常时调用
+	 * @param e 异常实体
+	 * @param session 产生异常的会话
+	 */
+	 void onCatchException(Exception e, Jiminal session);
+
+
+## 收发信息 ##
+发送信息只需要调用Jiminal.send()方法传入包即可；连接成功时，Jiminal会创建接收信息的子线程，收到信息时，子线程会回调onPackageArrived()方法。
+
+## 其他配置 ##
+在任何时候都可以修改Jiminal的一些其他配置，如发送包后最大等待回复包的时间，以及一些开始标志和结束标志等参数。只需要调用Jiminal.setSocketConfig()方法即可。
+
+
+> 获取Jiminal2.0  
+[https://github.com/darhao/Jiminal/releases](https://github.com/darhao/Jiminal/releases "发布页面")
+
+=====================================1.x分割线======================================
+
 * # Jiminal自我介绍
 你有socket编程的需求吗？  
 你在为协议的设计而烧脑吗？  
