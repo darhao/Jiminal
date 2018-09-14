@@ -11,6 +11,8 @@ import cc.darhao.jiminal.entity.PPackage;
 import cc.darhao.jiminal.entity.PReplyPackage;
 import cc.darhao.jiminal.entity.QPackage;
 import cc.darhao.jiminal.entity.QReplyPackage;
+import cc.darhao.jiminal.entity.UpdatePackage;
+import cc.darhao.jiminal.entity.UpdateReplyPackage;
 import cc.darhao.jiminal.pack.BasePackage;
 import cc.darhao.jiminal.socket.Jiminal;
 import cc.darhao.jiminal.socket.JiminalServer;
@@ -35,8 +37,10 @@ public class FullDuplexTest {
 	
 	private String msg;
 	
-	@Test
-	public void test() throws InterruptedException {
+	private int sum;
+	
+	
+	private void before() throws InterruptedException {
 		System.out.println("===============开始全双工测试===============");
 		socketConfig = new SocketConfig();
 		socketConfig.setMaxReplyTime(999999);
@@ -45,25 +49,41 @@ public class FullDuplexTest {
 		clientEndPoint.setSocketConfig(socketConfig);
 		new Thread(()-> {
 			server.listenConnect();
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-			}
-			server.close();
 		}).start();
 		clientEndPoint.connect();
+	}
+	
+	
+	@Test
+	public void test1() throws InterruptedException {
+		before();
 		PPackage p = new PPackage();
 		p.setMsg("你好世界！Hello!");
 		clientEndPoint.send(p);
 		Thread.sleep(2000);
+		Assert.assertEquals("你好世界！Hello!+1", msg);
 		QPackage q = new QPackage();
+		q.setMsg("FF FF 0D 0A");
 		serverEndPoint.send(q);
 		Thread.sleep(2000);
-		clientEndPoint.close();
-		serverEndPoint.close();
-		Assert.assertEquals("你好世界！Hello!+1", msg);
 		Assert.assertEquals(100, age);
-		System.out.println("===============全双工测试结束===============");
+	}
+	
+	
+	@Test
+	public void test2() throws InterruptedException {
+		before();
+		for (int i = 0; i < 32; i++) {
+			UpdatePackage updatePackage = new UpdatePackage();
+			updatePackage.setFaceName("");
+			updatePackage.setFingerName("");
+			updatePackage.setHeadName("");
+			updatePackage.setMd5("");
+			updatePackage.setSuffixTime("");
+			clientEndPoint.send(updatePackage);
+		}
+		Thread.sleep(1000);
+		Assert.assertEquals(32, sum);
 	}
 	
 	
@@ -71,16 +91,20 @@ public class FullDuplexTest {
 		PackageConfig packageConfig = new PackageConfig();
 		packageConfig.add(QPackage.class, true);
 		packageConfig.add(PPackage.class, false);
+		packageConfig.add(UpdatePackage.class, false);
 		server = new JiminalServer(5017, packageConfig, new JiminalServerCallback() {
 			
 			@Override
 			public void onPackageArrived(BasePackage p, BasePackage r, Jiminal session) {
-				System.out.println("服务器收到P包");
 				if (p instanceof PPackage) {
 					PPackage pPackage = (PPackage) p;
 					String string = pPackage.getMsg();
 					PReplyPackage pReplyPackage = (PReplyPackage) r;
 					pReplyPackage.setMsg(string + "+1");
+				}
+				if(p instanceof UpdatePackage) {
+					UpdateReplyPackage updateReplyPackage  = (UpdateReplyPackage) r;
+					updateReplyPackage.setResultCode(20);
 				}
 			}
 			
@@ -98,7 +122,6 @@ public class FullDuplexTest {
 
 			@Override
 			public void onReplyArrived(BasePackage r, Jiminal session) {
-				System.out.println("服务器收到Q包回复");
 				if (r instanceof QReplyPackage) {
 					QReplyPackage qReplyPackage = (QReplyPackage) r;
 					age = qReplyPackage.getAge();
@@ -112,11 +135,11 @@ public class FullDuplexTest {
 		PackageConfig packageConfig = new PackageConfig();
 		packageConfig.add(PPackage.class, true);
 		packageConfig.add(QPackage.class, false);
+		packageConfig.add(UpdatePackage.class, true);
 		clientEndPoint = new Jiminal("127.0.0.1", 5017, packageConfig, new JiminalCallback() {
 			
 			@Override
 			public void onPackageArrived(BasePackage p, BasePackage r, Jiminal session) {
-				System.out.println("客户端收到Q包");
 				if (p instanceof QPackage) {
 					QReplyPackage qReplyPackage = (QReplyPackage) r;
 					qReplyPackage.setAge(100);
@@ -130,10 +153,12 @@ public class FullDuplexTest {
 			
 			@Override
 			public void onReplyArrived(BasePackage r, Jiminal session) {
-				System.out.println("客户端收到P包回复");
 				if (r instanceof PReplyPackage) {
 					PReplyPackage pReplyPackage = (PReplyPackage) r;
 					msg = pReplyPackage.getMsg();
+				}
+				if (r instanceof UpdateReplyPackage) {
+					sum++;
 				}
 			}
 

@@ -23,8 +23,6 @@ public class InterferenceTest {
 
 	private Jiminal clientEndPoint;
 	
-	private Jiminal serverEndPoint;
-	
 	private JiminalServer server;
 	
 	private int i = 0;
@@ -45,8 +43,6 @@ public class InterferenceTest {
 		Thread.sleep(5000);
 		clientEndPoint.send(p);
 		Thread.sleep(10000);
-		clientEndPoint.close();
-		serverEndPoint.close();
 		Assert.assertEquals(2, i);
 		System.out.println("===============干扰测试结束===============");
 	}
@@ -88,7 +84,6 @@ public class InterferenceTest {
 			
 			@Override
 			public void onCatchClient(Jiminal session) {
-				serverEndPoint = session;
 				System.out.println("服务端：监听到客户端连接");
 			}
 

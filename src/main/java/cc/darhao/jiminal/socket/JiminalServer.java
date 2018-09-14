@@ -70,7 +70,11 @@ public class JiminalServer {
 				//回调
 				callback.onCatchClient(jiminal);
 			} catch (IOException e) {
-				e.printStackTrace();
+				if(e.getMessage().equals("Socket is closed")) {
+					break;
+				}else {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -84,7 +88,6 @@ public class JiminalServer {
 			server.close();
 		} catch (Exception e) {
 		}
-		server = null;
 	}
 	
 	

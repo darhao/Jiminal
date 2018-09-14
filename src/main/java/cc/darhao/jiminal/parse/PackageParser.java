@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import cc.darhao.dautils.api.BytesParser;
-import cc.darhao.dautils.api.CRC16Util;
 import cc.darhao.dautils.api.FieldUtil;
 import cc.darhao.dautils.api.StringUtil;
 import cc.darhao.jiminal.annotation.Parse;
@@ -36,8 +35,8 @@ public class PackageParser {
 	 * @param p 需要进行初始化的包对象
 	 */
 	public static void initPackageInfo(BasePackage p) {
-		//计算长度（已知长度：协议号+信息序列号+校验位=5）
-		int length = 5;
+		//计算长度（已知长度：协议号+信息序列号=3）
+		int length = 3;
 		//创建用于存储Boolean类型字段字节编号的Set
 		Set<Integer> byteNoSet = new HashSet<Integer>();
 		for (Field field : p.getClass().getDeclaredFields()) {
@@ -61,35 +60,20 @@ public class PackageParser {
 	
 	
 	/**
-	 * 对字节集进行CRC校验，无误返回true
-	 */
-	public static boolean crc(List<Byte> bytes) {
-		short calculationResults = CRC16Util.CRC16_X25(bytes.subList(0, bytes.size() - 2));
-		short record = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
-		return calculationResults == record;
-	}
-
-
-	/**
 	 * 把字节集解析成包
-	 * @param isReplyPackage 该布尔值用于区分被解析字节集是正常包还是回复包
 	 * @throws CRCException  CRC校验失败时抛出
 	 * @throws ProtocolNotMatchException 协议未能匹配时抛出
 	 * @throws EnumValueNotExistException 
 	 */
 	public static BasePackage parse(List<Byte> bytes, PackageConfig packageConfig) throws PackageParseException {
-		if(!crc(bytes)) {
-			throw new CRCException(bytes);
-		}
 		//解析基类
 		BasePackage p = new BasePackage();
 		p.length = bytes.get(0);
-		p.serialNo = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 4, bytes.size() - 2));
-		p.crc = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
+		p.serialNo = (short) BytesParser.parseBytesToInteger(bytes.subList(bytes.size() - 2, bytes.size()));
 		//判断协议类型
 		byte protocalType = bytes.get(1);
 		//获取信息内容字节列表
-		List<Byte> bodyBytes = bytes.subList(2, bytes.size() - 4);
+		List<Byte> bodyBytes = bytes.subList(2, bytes.size() - 2);
 		for (Class cls : packageConfig.getAll()) {
 			//匹配协议包
 			Protocol protocol = (Protocol) cls.getAnnotation(Protocol.class);
@@ -220,9 +204,9 @@ public class PackageParser {
 		bytes.add((byte) p.length);
 		//序列化协议
 		bytes.add((byte) p.getClass().getAnnotation(Protocol.class).value());
-		//创建占位字节列表，长度为：包长度减去5
-		List<Byte> bodyBytes = new ArrayList<Byte>(Byte.toUnsignedInt(p.length) - 5);
-		for (int i = 0; i < Byte.toUnsignedInt(p.length) - 5; i++) {
+		//创建占位字节列表，长度为：包长度减去3
+		List<Byte> bodyBytes = new ArrayList<Byte>(Byte.toUnsignedInt(p.length) - 3);
+		for (int i = 0; i < Byte.toUnsignedInt(p.length) - 3; i++) {
 			bodyBytes.add((byte) 0);
 		}
 		try {
@@ -335,12 +319,6 @@ public class PackageParser {
 		String temp = StringUtil.stretch(StringUtil.fixLength(StringUtil.press(BytesParser.parseBytesToHexString(serialNoBytes)), 4), 2);
 		serialNoBytes = BytesParser.parseHexStringToBytes(temp);
 		bytes.addAll(serialNoBytes);
-		//序列化crc
-		List<Byte> crcData = BytesParser.parseIntegerToBytes(CRC16Util.CRC16_X25(bytes));
-		//如果有4个字节则去掉前两个
-		temp = StringUtil.stretch(StringUtil.fixLength(StringUtil.press(BytesParser.parseBytesToHexString(crcData)), 4), 2);
-		crcData = BytesParser.parseHexStringToBytes(temp);
-		bytes.addAll(crcData);
 		return bytes;
 	}
 

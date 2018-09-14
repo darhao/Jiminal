@@ -23,7 +23,7 @@ public class PackageConfig {
 	
 	
 	/**
-	 * 添加通讯包类，并声明该通讯包类属于我方主动发送或是对方主动发送【无须添加回复包类，否则报错】
+	 * 添加通讯包类，并声明该通讯包类属于我方主动发送或是对方主动发送【无须添加回复包类】
 	 * @param clazz 类
 	 * @param isOwner 是否属于我方主动发送
 	 */
@@ -33,7 +33,7 @@ public class PackageConfig {
 			Class replyClass = Class.forName(clazz.getName().replace("Package", "ReplyPackage"));
 			packageInfos.put(replyClass, isOwner);
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			System.out.println("没有找到包：" + e.getMessage());
 		}
 	}
 	

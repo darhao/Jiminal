@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import cc.darhao.dautils.api.BytesParser;
 import cc.darhao.dautils.api.DateUtil;
 import cc.darhao.jiminal.callback.JiminalBaseCallback;
 import cc.darhao.jiminal.callback.JiminalCallback;
@@ -24,12 +25,9 @@ import cc.darhao.jiminal.pack.BasePackage;
 import cc.darhao.jiminal.parse.PackageParser;
 
 /**
- * 需要指定一个通讯包的包路径<br>
  * 可配置项：<br>
  * <ul>
- * 	<li>起始、结束位（限定各两个字节）
  * 	<li>超时时间（单位毫秒）
- * 	<li>最多重试次数
  * </ul>
  * <br>
  * <b>通讯包编写说明：</b>
@@ -222,30 +220,26 @@ public class Jiminal {
 
 	void startReceiveThread() {
 		receiveThread = new Thread( () -> {
-			// 接收回复包
-			//正文标识
-			boolean isContent = false;
-			//缓存2个字节
-			byte b1, b2 = -2;
-			//临时存储字节集
-			List<Byte> bytes = new ArrayList<Byte>();
-			//0xFF连续次数超过64次将认为远程设备已断开连接
-			int remoteOfflineFlagsCount = 0;
 			try {
 				while (true) {
-					try {
-						if(receiveThread.isInterrupted()) {
-							break;
-						}
-						// 读一个字节，缓存一个字节
-						b1 = b2;
-						try {
-							b2 = (byte) socket.getInputStream().read();
-						} catch (IOException e) {
-							if(!e.getMessage().equalsIgnoreCase("Socket Closed")) {
-								throw e;
-							}
-						}
+					if(receiveThread.isInterrupted()) {
+						break;
+					}
+					
+					//存放字节集
+					List<Byte> bytes = new ArrayList<>();
+					
+					//0xFF连续次数超过64次将认为远程设备已断开连接
+					int remoteOfflineFlagsCount = 0;
+					
+					//读第一个字节识别包长度
+					byte b1 = (byte) socket.getInputStream().read();
+					bytes.add(b1);
+					int length = Byte.toUnsignedInt(b1);
+					
+					//读取包长度大小的字节集
+					for (int i = 0; i < length; i++) {
+						byte b2 = (byte) socket.getInputStream().read();
 						//判断是否是FF
 						if(b2 == -1) {
 							remoteOfflineFlagsCount++;
@@ -255,39 +249,15 @@ public class Jiminal {
 						}else {
 							remoteOfflineFlagsCount = 0;
 						}
-						// 判断正文
-						if (isContent) {
-							bytes.add((byte) b2);
-						}
-						// 判断包头
-						if (b1 == socketConfig.getStartFlags()[0] && b2 == socketConfig.getStartFlags()[1]) {
-							isContent = true;
-						}
-						// 判断包尾
-						if (b1 == socketConfig.getEndFlags()[0] && b2 == socketConfig.getEndFlags()[1]) {
-							isContent = false;
-							//判断前两个字节是否是去语义标识符
-							byte e1 = bytes.get(bytes.size() - 4);
-							byte e2 = bytes.get(bytes.size() - 3);
-							if(e1 ==  socketConfig.getEndInvalidFlags()[0] && e2 == socketConfig.getEndInvalidFlags()[1]) {
-								//去掉去语义标识符
-								bytes.remove(bytes.size() - 3);
-								bytes.remove(bytes.size() - 3);
-								//返回主循环
-								continue;
-							}
-							//拼包：去掉头尾，去语义化，并且反序列化包
-							BasePackage p = jigsaw(bytes);
-							//处理业务
-							handle(p);
-							//清空缓存
-							bytes.clear();
-						}
-					} catch (PackageParseException e) {
-						callback.onCatchException(e, this);
+						bytes.add(b2);
 					}
+					
+					//拼包：去掉头尾，去语义化，并且反序列化包
+					BasePackage p = jigsaw(bytes);
+					//处理业务
+					handle(p);
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				callback.onCatchException(e, this);
 			}
 		});
@@ -304,7 +274,6 @@ public class Jiminal {
 			socket.close();
 		} catch (Exception e) {
 		}
-		socket = null;
 	}
 
 
@@ -344,44 +313,17 @@ public class Jiminal {
 	private List<Byte> unJig(BasePackage p) {
 		//序列化
 		List<Byte> bytes = PackageParser.serialize(p);
-		try {
-			//检测文中是否存在结束位，如果有则用去语义标识注释
-			byte a1, a2 = 0;
-			for (int i = 0; i < bytes.size(); i++) {
-				a1 = a2;
-				a2 = bytes.get(i);
-				if(a1 == socketConfig.getEndFlags()[0] && a2 == socketConfig.getEndFlags()[1]) {
-					bytes.add(i - 1, socketConfig.getEndInvalidFlags()[0]);
-					bytes.add(i, socketConfig.getEndInvalidFlags()[1]);
-					i += 2;
-				}
-			}
-		} catch (IndexOutOfBoundsException e3) {
-		}
 		//打印日志
 		System.out.println("[发送至] [" + remoteIp + ":"+ remotePort +"] [" + DateUtil.yyyyMMddHHmmss(new Date()) + "]");
-		for (Byte b : bytes) {
-			System.out.print(Integer.toHexString(b) + " ");
-		}
-		System.out.println();
-		// 加上起始位和结束位
-		bytes.add(0, socketConfig.getStartFlags()[0]);
-		bytes.add(1, socketConfig.getStartFlags()[1]);
-		bytes.add(socketConfig.getEndFlags()[0]);
-		bytes.add(socketConfig.getEndFlags()[1]);
+		System.out.println(BytesParser.parseBytesToHexString(bytes));
 		return bytes;
 	}
 
 
 	private BasePackage jigsaw(List<Byte> bytes) throws PackageParseException{
-		bytes.remove(bytes.size() - 1);
-		bytes.remove(bytes.size() - 1);
 		//打印日志
 		System.out.println("[接收自] [" + remoteIp + ":"+ remotePort +"] [" + DateUtil.yyyyMMddHHmmss(new Date()) + "]");
-		for (Byte b : bytes) {
-			System.out.print(Integer.toHexString(b) + " ");
-		}
-		System.out.println();
+		System.out.println(BytesParser.parseBytesToHexString(bytes));
 		// 把bytes解析成Entity
 		return PackageParser.parse(bytes, packageConfig);
 	}

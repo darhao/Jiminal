@@ -20,9 +20,5 @@ public class BasePackage {
 	 * 信息序列号
 	 */
 	public Short serialNo;
-	/**
-	 * 错误校验码
-	 */
-	public Short crc;
 	
 }
