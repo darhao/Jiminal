@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -128,7 +129,7 @@ public class Jiminal {
 		this.socketConfig = new SocketConfig();
 		serialNo = 0;
 		handledPackageSerialNos = new HashSet<>();
-		sendSerialNoReplys = new HashMap<>();
+		sendSerialNoReplys = Collections.synchronizedMap(new HashMap<>());
 	}
 
 
